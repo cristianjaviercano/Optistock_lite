@@ -80,7 +80,7 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
                    {icon}
                    {isPlayerPosition && <ForkliftIcon className={cn("h-6 w-6 text-foreground z-10 absolute transition-transform", getRotationClass(playerDirection))} />}
                    {orderItem && (
-                       <div className="absolute inset-0 flex items-center justify-center z-20 animate-pulse">
+                       <div className="absolute inset-0 flex items-center justify-center z-5">
                            <Package className="h-5 w-5 text-destructive" />
                        </div>
                    )}

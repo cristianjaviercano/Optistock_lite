@@ -39,7 +39,8 @@ export default function SimulationActive({ layout, order, mode, initialPlayerPos
   const isMoveValid = useCallback((x: number, y: number) => {
     if (x < 0 || x >= gridSize.width || y < 0 || y >= gridSize.height) return false;
     const cell = layout.find(item => item.x === x && item.y === y);
-    return cell?.type === 'floor' || cell?.type === 'bay-in' || cell?.type === 'bay-out' || cell?.type === 'processing' || cell?.type === 'forklift';
+    // Forklift can only move on floor, bays, processing areas, and forklift zones. Not shelves.
+    return cell?.type !== 'shelf';
   }, [layout, gridSize]);
 
   const handleMove = useCallback((dx: number, dy: number) => {
@@ -59,10 +60,10 @@ export default function SimulationActive({ layout, order, mode, initialPlayerPos
 
   const handleInteraction = () => {
     const adjacentCells = [
-      { x: playerPosition.x, y: playerPosition.y - 1 },
-      { x: playerPosition.x, y: playerPosition.y + 1 },
-      { x: playerPosition.x - 1, y: playerPosition.y },
-      { x: playerPosition.x + 1, y: playerPosition.y },
+      { x: playerPosition.x, y: playerPosition.y - 1 }, // up
+      { x: playerPosition.x, y: playerPosition.y + 1 }, // down
+      { x: playerPosition.x - 1, y: playerPosition.y }, // left
+      { x: playerPosition.x + 1, y: playerPosition.y }, // right
     ];
 
     let interacted = false;
