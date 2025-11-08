@@ -16,7 +16,8 @@ import { useRouter } from 'next/navigation';
 export default function SimulationPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [layout, setLayout] = useState<WarehouseLayout | null>(null);
+  const [savedLayouts, setSavedLayouts] = useState<Record<string, NamedWarehouseLayout>>({});
+  const [selectedLayout, setSelectedLayout] = useState<WarehouseLayout | null>(null);
   const [gameState, setGameState] = useState<'setup' | 'active' | 'finished'>('setup');
   const [gameMode, setGameMode] = useState<GameMode>('picking');
   const [order, setOrder] = useState<OrderItem[]>([]);
@@ -25,33 +26,27 @@ export default function SimulationPage() {
 
   useEffect(() => {
     if (user) {
-      // For simulation, we'll try to load the layout from the first available slot.
-      // A more complex implementation could let the user choose which layout to simulate.
-      const savedLayoutsJson = localStorage.getItem(`optistock_layouts_${user.id}`);
-      if (savedLayoutsJson) {
-        try {
-            const savedLayouts: Record<string, NamedWarehouseLayout> = JSON.parse(savedLayoutsJson);
-            // Find the first available layout to use for the simulation
-            const firstSlotKey = Object.keys(savedLayouts).sort()[0];
-            const layoutToSimulate = firstSlotKey ? savedLayouts[firstSlotKey].layout : null;
-
-            if (layoutToSimulate) {
-              setLayout(layoutToSimulate);
-              const startPosition = findStartBay(layoutToSimulate);
-              if (startPosition) {
-                setPlayerPosition(startPosition);
-              }
-            }
-        } catch(e) {
-            console.error("Failed to parse layouts from localStorage", e);
+      let initialLayouts: Record<string, NamedWarehouseLayout> = {};
+      try {
+        const savedData = localStorage.getItem(`optistock_layouts_${user.id}`);
+        if (savedData) {
+          initialLayouts = JSON.parse(savedData);
         }
+      } catch (e) {
+        console.error("Failed to parse layouts from localStorage", e);
       }
+      setSavedLayouts(initialLayouts);
       setLoading(false);
     }
   }, [user]);
 
-  const handleStartGame = (mode: GameMode) => {
-    if (!layout) return;
+  const handleStartGame = (mode: GameMode, layout: WarehouseLayout) => {
+    const startPosition = findStartBay(layout);
+    if (startPosition) {
+      setPlayerPosition(startPosition);
+    }
+    
+    setSelectedLayout(layout);
     const layoutWithInventory = generateInventory(layout);
     const newOrder = generateOrder(layoutWithInventory, mode, 5);
     setOrder(newOrder);
@@ -60,7 +55,7 @@ export default function SimulationPage() {
   };
   
   const handleGameEnd = (finalStats: { time: number, moves: number, cost: number }) => {
-    if (!user || !layout) return;
+    if (!user || !selectedLayout) return;
     const gameId = new Date().toISOString() + Math.random();
     const newGameSession = {
       id: gameId,
@@ -68,7 +63,7 @@ export default function SimulationPage() {
       date: new Date().toISOString(),
       mode: gameMode,
       ...finalStats,
-      layout,
+      layout: selectedLayout,
     };
     const historyJson = localStorage.getItem(`optistock_history_${user.id}`);
     const history = historyJson ? JSON.parse(historyJson) : [];
@@ -84,7 +79,9 @@ export default function SimulationPage() {
     return <div className="flex h-full min-h-[500px] w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  if (!layout || layout.length === 0) {
+  const hasLayouts = Object.keys(savedLayouts).length > 0;
+
+  if (!hasLayouts) {
     return (
       <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed">
         <CardHeader>
@@ -100,10 +97,10 @@ export default function SimulationPage() {
     );
   }
 
-  if (gameState === 'active' && layout) {
+  if (gameState === 'active' && selectedLayout) {
     return (
         <SimulationActive
-          layout={layout}
+          layout={selectedLayout}
           order={order}
           mode={gameMode}
           initialPlayerPosition={playerPosition}
@@ -113,6 +110,6 @@ export default function SimulationPage() {
   }
 
   return (
-    <SimulationSetup onStart={handleStartGame} />
+    <SimulationSetup savedLayouts={savedLayouts} onStart={handleStartGame} />
   );
 }
