@@ -2,7 +2,7 @@
 
 import type { WarehouseLayout } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { User as UserIcon, Target, Factory, Truck, Server, ArrowRightToLine, ArrowLeftFromLine } from "lucide-react";
+import { User as UserIcon, Target, Factory, Server, ArrowRightToLine, ArrowLeftFromLine, Home } from "lucide-react";
 import React from "react";
 import type { OrderItem } from '@/lib/simulation';
 
@@ -39,11 +39,11 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, order
             );
             
             let icon = null;
-            if(item.type === 'shelf') icon = <Server className="h-5 w-5 text-primary opacity-60" />;
-            if(item.type === 'bay-in') icon = <ArrowRightToLine className="h-5 w-5 text-accent opacity-60" />;
-            if(item.type === 'bay-out') icon = <ArrowLeftFromLine className="h-5 w-5 text-accent opacity-60" />;
-            if(item.type === 'processing') icon = <Factory className="h-5 w-5 text-chart-3 opacity-60" />;
-            if(item.type === 'forklift') icon = <Truck className="h-5 w-5 text-chart-4 opacity-60" />;
+            if(item.type === 'shelf') icon = <Server className="h-5 w-5 text-primary opacity-20" />;
+            if(item.type === 'bay-in') icon = <ArrowRightToLine className="h-5 w-5 text-accent opacity-20" />;
+            if(item.type === 'bay-out') icon = <ArrowLeftFromLine className="h-5 w-5 text-accent opacity-20" />;
+            if(item.type === 'processing') icon = <Factory className="h-5 w-5 text-chart-3 opacity-20" />;
+            if(item.type === 'forklift') icon = <Home className="h-5 w-5 text-chart-4 opacity-20" />;
 
             gridItems.push(
               <div key={`${x}-${y}`} className={cellClasses}>
@@ -96,11 +96,11 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, order
                );
                
                let icon = null;
-               if(item.type === 'shelf') icon = <Server className="h-5 w-5 text-primary opacity-60" />;
-               if(item.type === 'bay-in') icon = <ArrowRightToLine className="h-5 w-5 text-accent opacity-60" />;
-               if(item.type === 'bay-out') icon = <ArrowLeftFromLine className="h-5 w-5 text-accent opacity-60" />;
-               if(item.type === 'processing') icon = <Factory className="h-5 w-5 text-chart-3 opacity-60" />;
-               if(item.type === 'forklift') icon = <Truck className="h-5 w-5 text-chart-4 opacity-60" />;
+               if(item.type === 'shelf') icon = <Server className="h-5 w-5 text-primary opacity-20" />;
+               if(item.type === 'bay-in') icon = <ArrowRightToLine className="h-5 w-5 text-accent opacity-20" />;
+               if(item.type === 'bay-out') icon = <ArrowLeftFromLine className="h-5 w-5 text-accent opacity-20" />;
+               if(item.type === 'processing') icon = <Factory className="h-5 w-5 text-chart-3 opacity-20" />;
+               if(item.type === 'forklift') icon = <Home className="h-5 w-5 text-chart-4 opacity-20" />;
        
                return (
                  <div key={`${x}-${y}`} className={cellClasses}>

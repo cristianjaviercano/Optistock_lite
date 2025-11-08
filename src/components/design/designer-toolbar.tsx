@@ -2,7 +2,7 @@
 
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { WarehouseItemType } from "@/lib/types";
-import { Eraser, Server, Factory, Truck, ArrowRightToLine, ArrowLeftFromLine } from "lucide-react";
+import { Eraser, Server, Factory, ArrowRightToLine, ArrowLeftFromLine, Forklift, Home } from "lucide-react";
 
 interface DesignerToolbarProps {
   selectedTool: WarehouseItemType | 'eraser';
@@ -14,7 +14,7 @@ const tools = [
   { value: 'bay-in', label: 'Ingreso', icon: ArrowRightToLine },
   { value: 'bay-out', label: 'Despacho', icon: ArrowLeftFromLine },
   { value: 'processing', label: 'Procesamiento', icon: Factory },
-  { value: 'forklift', label: 'Montacargas', icon: Truck },
+  { value: 'forklift', label: 'Zona de Montacargas', icon: Home },
   { value: 'eraser', label: 'Borrador', icon: Eraser },
 ]
 

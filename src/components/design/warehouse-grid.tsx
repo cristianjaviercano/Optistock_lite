@@ -2,7 +2,7 @@
 
 import type { WarehouseLayout, WarehouseItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Server, Factory, Truck, ArrowRightToLine, ArrowLeftFromLine } from "lucide-react";
+import { Server, Factory, ArrowRightToLine, ArrowLeftFromLine, Home } from "lucide-react";
 import React from "react";
 
 interface WarehouseGridProps {
@@ -16,7 +16,7 @@ const itemIcons: { [key: string]: React.ReactNode } = {
   'bay-in': <ArrowRightToLine className="h-4 w-4 text-accent" />,
   'bay-out': <ArrowLeftFromLine className="h-4 w-4 text-accent" />,
   processing: <Factory className="h-4 w-4 text-chart-3" />,
-  forklift: <Truck className="h-4 w-4 text-chart-4" />,
+  forklift: <Home className="h-4 w-4 text-chart-4" />,
 };
 
 function WarehouseCell({ item }: { item: WarehouseItem }) {
