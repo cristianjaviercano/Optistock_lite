@@ -273,7 +273,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     onNewOrder();
   }
   
-  const showDispatchButton = mode === 'picking' && currentOrder.some(o => o.status === 'ready-for-dispatch' || o.status === 'processed' || o.status === 'carrying');
+  const showDispatchButton = mode === 'picking' && currentOrder.some(o => o.status === 'ready-for-dispatch');
 
   return (
     <>
