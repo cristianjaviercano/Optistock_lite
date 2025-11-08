@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -10,7 +11,7 @@ import OrderList from './order-list';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { Gamepad, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Truck } from 'lucide-react';
+import { Gamepad, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Truck, Minus, RefreshCw } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { cn } from '@/lib/utils';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -215,6 +217,15 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     setCurrentOrder(prev => prev.map(o => o.status === 'ready-for-dispatch' ? { ...o, status: 'completed' } : o));
     toast({ title: "¡Despacho completo!", description: `${itemsToDispatch.length} paquete(s) han sido enviados.`});
   }, [currentOrder, toast]);
+  
+  const handleNewOrder = useCallback(() => {
+    onNewOrder();
+    toast({
+        title: '¡Nueva Orden!',
+        description: 'Se ha generado una nueva lista de tareas.'
+    })
+  }, [onNewOrder, toast]);
+
 
   useEffect(() => {
     if (currentOrder.length > 0 && currentOrder.every(item => item.status === 'completed' && !carriedItem)) {
@@ -229,6 +240,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     setCarriedItem(null);
     setTime(0);
     setMoves(0);
+    setIsOrderComplete(false);
   }, [order, initialPlayerPosition]);
 
   useEffect(() => {
@@ -274,28 +286,48 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
   }
   
   const showDispatchButton = mode === 'picking' && currentOrder.some(o => o.status === 'ready-for-dispatch');
+  
+  const HandDrawnButton = ({ children, className, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
+    <Button
+        variant="ghost"
+        className={cn("h-auto w-auto bg-transparent hover:bg-transparent border-2 border-foreground rounded-lg px-6 py-4 font-headline text-lg tracking-wider shadow-[4px_4px_0px_0px_hsl(var(--secondary))] hover:shadow-[2px_2px_0px_0px_hsl(var(--secondary))] transition-all disabled:opacity-30 disabled:shadow-none", className)}
+        {...props}
+    >
+        {children}
+    </Button>
+);
+
 
   const TouchControls = () => (
-    <CardContent className="p-4 flex flex-col gap-4">
-      <div className="flex justify-center items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => handleMove('up')}><ArrowUp/></Button>
-      </div>
-      <div className="flex justify-center items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => handleMove('left')}><ArrowLeft/></Button>
-            <Button onClick={handleInteraction} className="p-6 h-auto aspect-square bg-primary/20"><Gamepad className="w-6 h-6"/></Button>
-          <Button variant="outline" size="icon" onClick={() => handleMove('right')}><ArrowRight/></Button>
-      </div>
-      <div className="flex justify-center items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => handleMove('down')}><ArrowDown/></Button>
-      </div>
-      {showDispatchButton && (
-        <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-            <Truck className="mr-2"/>Despacho (D)
-        </Button>
-      )}
-      <p className="text-xs text-muted-foreground text-center">Usa los controles para moverte e interactuar.</p>
-    </CardContent>
-  );
+    <div className="w-full flex justify-around items-center p-4">
+        <HandDrawnButton onClick={handleDispatch} disabled={!showDispatchButton}>
+            despacho
+        </HandDrawnButton>
+        
+        <div className="grid grid-cols-3 grid-rows-3 gap-2 w-36 h-36">
+            <div className="col-start-2 row-start-1 flex justify-center items-center">
+                 <Button variant="outline" size="icon" onClick={() => handleMove('up')}><ArrowUp/></Button>
+            </div>
+             <div className="col-start-1 row-start-2 flex justify-center items-center">
+                <Button variant="outline" size="icon" onClick={() => handleMove('left')}><ArrowLeft/></Button>
+            </div>
+             <div className="col-start-2 row-start-2 flex justify-center items-center">
+                <Button onClick={handleInteraction} variant="primary" size="icon" className="w-12 h-12"><Minus className="w-8 h-8"/></Button>
+            </div>
+             <div className="col-start-3 row-start-2 flex justify-center items-center">
+                <Button variant="outline" size="icon" onClick={() => handleMove('right')}><ArrowRight/></Button>
+            </div>
+            <div className="col-start-2 row-start-3 flex justify-center items-center">
+                <Button variant="outline" size="icon" onClick={() => handleMove('down')}><ArrowDown/></Button>
+            </div>
+        </div>
+        
+        <HandDrawnButton onClick={handleNewOrder}>
+            Nuevo pedido
+        </HandDrawnButton>
+    </div>
+);
+
 
   return (
     <>
@@ -312,19 +344,21 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
                   carriedItem={carriedItem}
               />
           </div>
-          {/* Controls for mobile/tablet */}
-          <Card className="lg:hidden">
-            <TouchControls />
-          </Card>
         </div>
         <div className="flex flex-col gap-6">
           <OrderList order={currentOrder} mode={mode} />
-          {/* Controls for desktop */}
-          <Card className="hidden lg:block">
-            <TouchControls />
-          </Card>
         </div>
       </div>
+      
+       {/* CONTROLS AREA */}
+      <Card className="mt-6">
+          <CardContent className="p-2">
+             <TouchControls />
+             <p className="text-xs text-muted-foreground text-center -mt-2">Usa los controles o las flechas del teclado. Espacio para interactuar. 'D' para despachar.</p>
+          </CardContent>
+      </Card>
+
+
       <AlertDialog open={isOrderComplete}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -342,3 +376,5 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     </>
   );
 }
+
+    

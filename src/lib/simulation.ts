@@ -1,3 +1,4 @@
+
 import type { WarehouseLayout, InventoryItem, GameMode, OrderItemStatus, WarehouseItem } from './types';
 
 const PRODUCT_NAMES = [
