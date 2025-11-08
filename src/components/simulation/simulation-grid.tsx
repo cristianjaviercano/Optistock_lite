@@ -2,7 +2,7 @@
 
 import type { WarehouseLayout } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Forklift as ForkliftIcon, Package, Package2, PackageCheck, PackageOpen, PackageSearch } from "lucide-react";
+import { Forklift as ForkliftIcon, Package, Package2, PackageCheck, PackageOpen, PackageSearch, CheckCircle2 } from "lucide-react";
 import React from "react";
 import type { OrderItem } from '@/lib/simulation';
 
@@ -47,7 +47,8 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
   const getOrderItemIcon = (item: OrderItem) => {
     switch (item.status) {
       case 'pending': return <Package className="h-5 w-5 text-destructive" />;
-      case 'processing': return <PackageSearch className="h-5 w-5 text-blue-500 animate-pulse" />;
+      case 'processing': return <PackageSearch className="h-5 w-5 text-orange-500 animate-pulse" />;
+      case 'processed': return <CheckCircle2 className="h-5 w-5 text-purple-500" />;
       case 'completed': return <PackageCheck className="h-5 w-5 text-green-500" />;
       default: return null;
     }
@@ -84,11 +85,11 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
                
                let icon = null;
                 const IconComponent = {
-                    shelf: <div className="w-full h-full bg-primary/10"></div>,
-                    'bay-in': <div className="w-full h-full bg-accent/10"></div>,
-                    'bay-out': <div className="w-full h-full bg-accent/10"></div>,
-                    processing: <div className="w-full h-full bg-chart-3/10"></div>,
-                    forklift: <div className="w-full h-full bg-chart-4/10"></div>,
+                    shelf: <div className="w-full h-full bg-primary/10 opacity-50"></div>,
+                    'bay-in': <div className="w-full h-full bg-accent/10 opacity-50"></div>,
+                    'bay-out': <div className="w-full h-full bg-accent/10 opacity-50"></div>,
+                    processing: <div className="w-full h-full bg-chart-3/10 opacity-50"></div>,
+                    forklift: <div className="w-full h-full bg-chart-4/10 opacity-50"></div>,
                     floor: null,
                 }[item.type];
        

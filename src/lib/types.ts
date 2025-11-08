@@ -43,7 +43,7 @@ export interface GameSession {
   layout: WarehouseLayout;
 }
 
-export type OrderItemStatus = 'pending' | 'carrying' | 'processing' | 'completed';
+export type OrderItemStatus = 'pending' | 'carrying' | 'processing' | 'processed' | 'completed';
 
 export interface OrderItem {
   productId: string;

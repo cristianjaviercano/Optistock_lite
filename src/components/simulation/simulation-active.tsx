@@ -98,7 +98,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
         if (carriedItem) {
             // Drop at processing station
             if (interactionCell.type === 'processing' && carriedItem.status === 'carrying') {
-                toast({ title: "Item in processing", description: `Processing ${carriedItem.productName}.`});
+                toast({ title: "Item en procesamiento", description: `Procesando ${carriedItem.productName}.`});
                 
                 setCurrentOrder(prev => prev.map(o => o.productId === carriedItem.productId ? {...o, status: 'processing', location: {x, y} } : o));
                 const itemToProcess = { ...carriedItem, status: 'processing', location: {x,y} }
@@ -107,17 +107,17 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
                 // Simulate processing time
                 const processingTime = (Math.floor(Math.random() * 5) + 2) * 1000; // 2-6 seconds
                 setTimeout(() => {
-                    setCurrentOrder(prev => prev.map(o => o.productId === itemToProcess.productId ? {...o, status: 'completed' } : o));
-                    toast({ title: "Processing complete!", description: `${itemToProcess.productName} is ready for dispatch.`});
+                    setCurrentOrder(prev => prev.map(o => o.productId === itemToProcess.productId ? {...o, status: 'processed' } : o));
+                    toast({ title: "¡Procesamiento completo!", description: `${itemToProcess.productName} está listo para ser despachado.`});
                 }, processingTime);
 
             } // Drop at dispatch bay
-            else if (interactionCell.type === 'bay-out') {
-                toast({ title: "Item Dispatched!", description: `${carriedItem.productName} has been dispatched.`});
-                setCurrentOrder(prev => prev.map(o => o.productId === carriedItem!.productId ? {...o, status: 'completed' } : o));
+            else if (interactionCell.type === 'bay-out' && carriedItem.status === 'processed') {
+                toast({ title: "¡Artículo Despachado!", description: `${carriedItem.productName} ha sido despachado.`});
+                setCurrentOrder(prev => prev.map(o => o.productId === carriedItem!.productId ? {...o, status: 'completed', location: {x, y}} : o));
                 setCarriedItem(null);
             } else {
-                toast({ variant: "destructive", title: "Wrong location", description: "This is not the correct drop-off point."})
+                toast({ variant: "destructive", title: "Ubicación incorrecta", description: "Este no es el punto de entrega correcto."})
             }
         } 
         // --- Picking up an item ---
@@ -128,7 +128,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
                 if (playMode === 'guided') {
                     const firstPending = currentOrder.find(o => o.status === 'pending');
                     if (firstPending && firstPending.productId !== itemToPick.productId) {
-                        toast({ variant: "destructive", title: "Wrong Order", description: `Please pick ${firstPending.productName} first.` });
+                        toast({ variant: "destructive", title: "Orden incorrecta", description: `Por favor, recoja ${firstPending.productName} primero.` });
                         return;
                     }
                 }
@@ -136,14 +136,14 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
                 if (interactionCell.type === 'shelf') { // Pick from shelf
                     setCarriedItem({...itemToPick, status: 'carrying'});
                     setCurrentOrder(prev => prev.map(o => o.productId === itemToPick.productId ? {...o, status: 'carrying'}: o));
-                    toast({ title: `Item Picked!`, description: `Carry ${itemToPick.productName} to a processing station.` });
+                    toast({ title: `¡Artículo recogido!`, description: `Lleva ${itemToPick.productName} a una estación de procesamiento.` });
                 } 
             }
             // Pick up a PROCESSED item from processing station
-            const itemToDispatch = currentOrder.find(o => o.location.x === x && o.location.y === y && o.status === 'completed');
+            const itemToDispatch = currentOrder.find(o => o.location.x === x && o.location.y === y && o.status === 'processed');
             if (itemToDispatch && interactionCell.type === 'processing') {
-                setCarriedItem(itemToDispatch);
-                toast({ title: `Item Ready!`, description: `Take ${itemToDispatch.productName} to a dispatch bay.` });
+                setCarriedItem({...itemToDispatch, status: 'processed'});
+                toast({ title: `¡Artículo listo!`, description: `Lleva ${itemToDispatch.productName} a una bahía de despacho.` });
             }
         }
     }
@@ -154,11 +154,11 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
         if (carriedItem) {
             // Drop at the target shelf
             if (interactionCell.type === 'shelf' && carriedItem.location.x === x && carriedItem.location.y === y) {
-                toast({ title: `Item Stocked!`, description: `${carriedItem.quantity}x ${carriedItem.productName}` });
+                toast({ title: `¡Artículo Almacenado!`, description: `${carriedItem.quantity}x ${carriedItem.productName}` });
                 setCurrentOrder(prev => prev.map(o => o.productId === carriedItem.productId ? { ...o, status: 'completed' } : o));
                 setCarriedItem(null);
             } else {
-                toast({ variant: "destructive", title: "Wrong shelf", description: "This is not the correct location for this item."})
+                toast({ variant: "destructive", title: "Estante incorrecto", description: "Esta no es la ubicación correcta para este artículo."})
             }
         }
         // --- Picking up an item ---
@@ -168,13 +168,13 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
                  if (playMode === 'guided') {
                     const firstPending = currentOrder.find(o => o.status === 'pending');
                     if (firstPending && firstPending.productId !== itemToPick.productId) {
-                        toast({ variant: "destructive", title: "Wrong Order", description: `Please stock ${firstPending.productName} first.` });
+                        toast({ variant: "destructive", title: "Orden incorrecta", description: `Por favor, almacene ${firstPending.productName} primero.` });
                         return;
                     }
                 }
                 setCarriedItem({...itemToPick, status: 'carrying'});
                 setCurrentOrder(prev => prev.map(o => o.productId === itemToPick.productId ? {...o, status: 'carrying'}: o));
-                toast({ title: `Item Picked!`, description: `Carry ${itemToPick.productName} to its shelf.` });
+                toast({ title: `¡Artículo Recogido!`, description: `Lleva ${itemToPick.productName} a su estante.` });
             }
         }
     }

@@ -17,6 +17,7 @@ const statusIcons: Record<OrderItemStatus, React.ReactNode> = {
     pending: <Circle className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0"/>,
     carrying: <PackageOpen className="h-5 w-5 text-blue-500 mt-0.5 shrink-0"/>,
     processing: <PackageSearch className="h-5 w-5 text-orange-500 mt-0.5 shrink-0 animate-pulse"/>,
+    processed: <CheckCircle2 className="h-5 w-5 text-purple-500 mt-0.5 shrink-0"/>,
     completed: <PackageCheck className="h-5 w-5 text-green-500 mt-0.5 shrink-0"/>,
 }
 
@@ -33,6 +34,8 @@ const getStatusText = (item: OrderItem, mode: GameMode): string => {
             return `Llevar a: ${String.fromCharCode(65 + item.location.x)}${item.location.y + 1}`;
         case 'processing':
             return 'En procesamiento...';
+        case 'processed':
+            return `Listo para despacho. Llévalo a una bahía de salida.`;
         case 'completed':
             return 'Completado';
         default:
