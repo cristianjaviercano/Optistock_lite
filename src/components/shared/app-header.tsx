@@ -42,8 +42,8 @@ export default function AppHeader() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="sm:max-w-xs">
-          <SheetHeader className="sr-only">
-             <SheetTitle>Navegación Principal</SheetTitle>
+          <SheetHeader>
+             <SheetTitle className="sr-only">Navegación Principal</SheetTitle>
           </SheetHeader>
           <nav className="grid gap-6 text-lg font-medium">
             <div className="group flex h-16 shrink-0 items-center justify-center text-center">
