@@ -1,4 +1,4 @@
-import type { WarehouseLayout, InventoryItem, GameMode, OrderItemStatus } from './types';
+import type { WarehouseLayout, InventoryItem, GameMode, OrderItemStatus, WarehouseItem } from './types';
 
 const PRODUCT_NAMES = [
   "Flux Capacitor", "Quantum Carburetor", "Hyperdrive Core", "Plasma Injector",
@@ -30,6 +30,7 @@ export interface OrderItem {
   location: { x: number; y: number };
   quantity: number;
   status: OrderItemStatus;
+  origin?: { x: number, y: number }; // For stocking mode
 }
 
 export function generateOrder(layoutWithInventory: WarehouseLayout, mode: GameMode, size: number = 5): OrderItem[] {
@@ -115,3 +116,5 @@ export function findStartBay(layout: WarehouseLayout): { x: number; y: number } 
     const floor = layout.find(item => item.type === 'floor');
     return floor ? { x: floor.x, y: floor.y } : {x: 0, y: 0};
 }
+
+    

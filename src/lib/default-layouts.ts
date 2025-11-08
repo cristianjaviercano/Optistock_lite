@@ -209,7 +209,7 @@ const defaultLayout1: WarehouseLayout = [
   { id: '5-10', type: 'floor', x: 5, y: 10 },
   { id: '6-10', type: 'floor', x: 6, y: 10 },
   { id: '7-10', type: 'floor', x: 7, y: 10 },
-  { id: '8-10', நொהג אופניים על ידי הפועל', x: 8, y: 10 },
+  { id: '8-10', type: 'floor', x: 8, y: 10 },
   { id: '9-10', type: 'floor', x: 9, y: 10 },
   { id: '10-10', type: 'floor', x: 10, y: 10 },
   { id: '11-10', type: 'floor', x: 11, y: 10 },
@@ -290,3 +290,5 @@ export const defaultLayouts = {
     '1': { name: 'Diseño Básico', layout: defaultLayout1 },
     '2': { name: 'Diseño Eficiente', layout: defaultLayout2 }
 };
+
+    
