@@ -2,7 +2,7 @@
 
 import type { WarehouseLayout } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Forklift as ForkliftIcon, Package, Package2, PackageCheck, PackageOpen, PackageSearch, CheckCircle2, Truck } from "lucide-react";
+import { Package, Package2, PackageCheck, PackageOpen, PackageSearch, CheckCircle2, Truck } from "lucide-react";
 import React from "react";
 import type { OrderItem } from '@/lib/simulation';
 
@@ -23,15 +23,34 @@ const GridHeaderCell = ({ children }: { children: React.ReactNode }) => (
     </div>
 )
 
+const ForkliftSvg = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
+    <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        className={className} 
+        {...props}
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+    >
+        <rect width="18" height="18" x="3" y="3" fill="#FFC700" stroke="none" rx="2"></rect>
+        <line x1="15" y1="7" x2="21" y2="7" stroke="black"></line>
+        <line x1="15" y1="17" x2="21" y2="17" stroke="black"></line>
+    </svg>
+);
+
+
 export default function SimulationGrid({ layout, gridSize, playerPosition, playerDirection, order, carriedItem }: SimulationGridProps) {
   
   const getRotationClass = (direction: Direction) => {
     switch (direction) {
       case 'up': return '-rotate-90';
       case 'down': return 'rotate-90';
-      case 'left': return 'rotate-180';
-      case 'right': return 'rotate-0';
-      default: return 'rotate-0';
+      case 'left': return 'scale-x-[-1]';
+      case 'right': return '';
+      default: return '';
     }
   }
 
@@ -39,7 +58,7 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
     switch (direction) {
         case 'up': return 'absolute -translate-y-full top-1/2 left-1/2 -translate-x-1/2';
         case 'down': return 'absolute translate-y-full bottom-1/2 left-1/2 -translate-x-1/2';
-        case 'left': return 'absolute -translate-x-full left-1/2 top-1/2 -translate-y-1/2';
+        case 'left': return 'absolute translate-x-full right-1/2 top-1/2 -translate-y-1/2'; // Flipped
         case 'right': return 'absolute translate-x-full right-1/2 top-1/2 -translate-y-1/2';
     }
   }
@@ -99,7 +118,7 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
                    {IconComponent}
                    {isPlayerPosition && (
                     <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <ForkliftIcon className={cn("h-6 w-6 text-foreground transition-transform", getRotationClass(playerDirection))} />
+                        <ForkliftSvg className={cn("h-6 w-6 text-foreground transition-transform", getRotationClass(playerDirection))} />
                         {carriedItem && (
                              <Package2 className={cn("h-4 w-4 text-destructive z-20", getForkliftAttachmentClass(playerDirection))} />
                         )}
