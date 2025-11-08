@@ -51,10 +51,10 @@ const GalleryItem = ({ title, children }: { title: string, children: React.React
   </div>
 );
 
-const InstructionStep = ({ icon, title, description }: { icon: React.ElementType, title: string, description: string }) => (
+const InstructionStep = ({ icon: Icon, title, description }: { icon: React.ElementType, title: string, description: string }) => (
   <li className="flex items-start gap-4">
     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-      <icon className="h-5 w-5" />
+      <Icon className="h-5 w-5" />
     </div>
     <div>
       <h4 className="font-semibold">{title}</h4>
