@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import React from "react";
 import type { OrderItemStatus } from "@/lib/types";
 
-// Re-creating a simplified version of the PalletBoxIcon for the gallery
+
 const PalletBoxIcon = ({ boxColor, className }: { boxColor: string; className?: string }) => (
     <svg 
         xmlns="http://www.w3.org/2000/svg" 
@@ -16,10 +16,30 @@ const PalletBoxIcon = ({ boxColor, className }: { boxColor: string; className?: 
         strokeLinecap="round" 
         strokeLinejoin="round"
     >
-        <rect width="20" height="6" x="2" y="16" fill="#A0522D" rx="1" />
-        <rect width="16" height="12" x="4" y="4" fill={boxColor} rx="1" stroke="#000" strokeWidth="0.5" />
-        <line x1="4" y1="10" x2="20" y2="10" stroke="#000" strokeOpacity="0.2" strokeWidth="1" />
-        <line x1="12" y1="4" x2="12" y2="10" stroke="#000" strokeOpacity="0.2" strokeWidth="1" />
+        {/* Pallet (70% size, centered) */}
+        <rect width="16.8" height="16.8" x="3.6" y="3.6" fill="#A0522D" rx="1" />
+        {/* Box (40% size, centered on top) */}
+        <rect width="9.6" height="9.6" x="7.2" y="5.2" fill={boxColor} rx="1" stroke="#000" strokeWidth="0.5" />
+        {/* Box fold line */}
+        <line x1="7.2" y1="10" x2="16.8" y2="10" stroke="#000" strokeOpacity="0.2" strokeWidth="1" />
+    </svg>
+);
+
+const ForkliftSvg = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
+    <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        className={className} 
+        {...props}
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+    >
+        <rect width="18" height="18" x="3" y="3" fill="#FFC700" stroke="none" rx="2"></rect>
+        <line x1="15" y1="7" x2="21" y2="7" stroke="black"></line>
+        <line x1="15" y1="17" x2="21" y2="17" stroke="black"></line>
     </svg>
 );
 
@@ -59,7 +79,6 @@ export default function TutorialPage() {
       { title: 'Estante', colorClass: 'bg-primary/80' },
       { title: 'Bahía (Ingreso/Despacho)', colorClass: 'bg-accent/80' },
       { title: 'Zona de Procesamiento', colorClass: 'bg-chart-3/80' },
-      { title: 'Zona de Montacargas', colorClass: 'bg-chart-4/80' },
   ];
 
 
@@ -169,6 +188,9 @@ export default function TutorialPage() {
                        ))}
                         <GalleryItem title="Suelo / Pasillo">
                             <div className="w-full h-full rounded-sm bg-background border"></div>
+                        </GalleryItem>
+                        <GalleryItem title="Montacargas">
+                            <ForkliftSvg className="w-full h-full p-1" />
                         </GalleryItem>
                          <GalleryItem title="Borrador">
                             <Eraser className="w-8 h-8 text-muted-foreground mx-auto" />

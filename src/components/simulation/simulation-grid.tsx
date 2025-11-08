@@ -47,13 +47,12 @@ const PalletBoxIcon = ({ boxColor, className }: { boxColor: string; className?: 
         strokeLinecap="round" 
         strokeLinejoin="round"
     >
-        {/* Pallet */}
-        <rect width="20" height="6" x="2" y="16" fill="#D2B48C" rx="1" />
-
-        {/* Box */}
-        <rect width="16" height="12" x="4" y="4" fill={boxColor} rx="1" stroke="#000" strokeWidth="0.5" />
-        <line x1="4" y1="10" x2="20" y2="10" stroke="#000" strokeOpacity="0.2" strokeWidth="1" />
-        <line x1="12" y1="4" x2="12" y2="10" stroke="#000" strokeOpacity="0.2" strokeWidth="1" />
+        {/* Pallet (70% size, centered) */}
+        <rect width="16.8" height="16.8" x="3.6" y="3.6" fill="#A0522D" rx="1" />
+        {/* Box (40% size, centered on top) */}
+        <rect width="9.6" height="9.6" x="7.2" y="5.2" fill={boxColor} rx="1" stroke="#000" strokeWidth="0.5" />
+        {/* Box fold line */}
+        <line x1="7.2" y1="10" x2="16.8" y2="10" stroke="#000" strokeOpacity="0.2" strokeWidth="1" />
     </svg>
 );
 
