@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Gamepad2, Warehouse, LogOut, BarChart, Settings, ChevronsLeft, ChevronsRight, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Gamepad2, Warehouse, LogOut, Settings, ChevronsLeft, ChevronsRight, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Logo from '@/components/shared/logo';
@@ -14,7 +14,6 @@ const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/design', icon: Warehouse, label: 'Diseñador' },
   { href: '/simulation', icon: Gamepad2, label: 'Simulador' },
-  { href: '/statistics', icon: BarChart, label: 'Estadísticas' },
   { href: '/settings', icon: Settings, label: 'Configuraciones' },
   { href: '/tutorial', icon: BookOpen, label: 'Tutorial' },
 ];

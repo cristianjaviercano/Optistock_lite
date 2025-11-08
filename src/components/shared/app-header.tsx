@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Warehouse, Gamepad2, PanelLeft, LogOut, BarChart, Settings, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Warehouse, Gamepad2, PanelLeft, LogOut, Settings, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import Logo from './logo';
 import { useAuth } from '@/context/auth-context';
@@ -22,7 +22,6 @@ const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/design', icon: Warehouse, label: 'Designer' },
   { href: '/simulation', icon: Gamepad2, label: 'Simulator' },
-  { href: '/statistics', icon: BarChart, label: 'Estadísticas' },
   { href: '/settings', icon: Settings, label: 'Configuraciones' },
   { href: '/tutorial', icon: BookOpen, label: 'Tutorial' },
 ];
