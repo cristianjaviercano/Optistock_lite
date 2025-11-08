@@ -53,23 +53,23 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
   const isMoveValid = useCallback((x: number, y: number) => {
     if (x < 0 || x >= gridSize.width || y < 0 || y >= gridSize.height) return false;
     const cell = layout.find(item => item.x === x && item.y === y);
-    
-    // Cannot move onto shelves.
-    if(cell?.type === 'shelf') return false;
+    if (!cell) return false;
 
-    // Cannot move onto a processing station that is busy
-    const isProcessingCell = cell?.type === 'processing';
-    const isProcessingItemThere = currentOrder.some(o => o.location.x === x && o.location.y === y && o.status === 'processing');
-    if (isProcessingCell && isProcessingItemThere) return false;
-    
-    // Can move onto bays, but cannot move through items ready for dispatch
-    const isBayOutCell = cell?.type === 'bay-out';
-    const isReadyForDispatchItemThere = currentOrder.some(o => o.location.x === x && o.location.y === y && o.status === 'ready-for-dispatch');
-    if (isBayOutCell && isReadyForDispatchItemThere) return false;
+    // Cannot move onto shelves, in-bays, or out-bays
+    if (['shelf', 'bay-in', 'bay-out'].includes(cell.type)) {
+      return false;
+    }
 
-    // Cannot move onto a cell with a pending item
-    const hasPendingOrder = currentOrder.some(o => o.location.x === x && o.location.y === y && o.status === 'pending');
-    if (hasPendingOrder) return false;
+    // Check for items on the cell that would block movement
+    const itemOnCell = currentOrder.find(o => 
+        o.location.x === x && 
+        o.location.y === y && 
+        ['pending', 'processing', 'processed', 'ready-for-dispatch'].includes(o.status)
+    );
+
+    if (itemOnCell) {
+      return false;
+    }
 
     return true;
   }, [layout, gridSize, currentOrder]);
