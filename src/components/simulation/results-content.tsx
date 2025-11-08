@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -70,15 +71,36 @@ export default function ResultsPageContent({ history, selectedGameId, onSelectGa
       </Card>
     );
   }
-
+  
   if (!session) {
     return (
-      <Card className="text-center">
-        <CardHeader>
-          <CardTitle>Selecciona una simulación</CardTitle>
-          <CardDescription>Elige una simulación del menú para ver sus detalles.</CardDescription>
-        </CardHeader>
-      </Card>
+      <>
+        <Card>
+            <CardHeader>
+                 <Label htmlFor="game-select-placeholder">Seleccionar Simulación</Label>
+            </CardHeader>
+            <CardContent>
+                <Select value={selectedGameId || ''} onValueChange={onSelectGame}>
+                    <SelectTrigger id="game-select-placeholder">
+                        <SelectValue placeholder="Elige una simulación para ver..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {history.map(s => (
+                            <SelectItem key={s.id} value={s.id}>
+                                {new Date(s.date).toLocaleString()} - Coste: ${s.cost.toFixed(2)}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </CardContent>
+        </Card>
+        <Card className="text-center mt-6">
+            <CardHeader>
+            <CardTitle>Selecciona una simulación</CardTitle>
+            <CardDescription>Elige una simulación del menú para ver sus detalles.</CardDescription>
+            </CardHeader>
+        </Card>
+      </>
     );
   }
   
@@ -162,7 +184,7 @@ export default function ResultsPageContent({ history, selectedGameId, onSelectGa
                 <CardDescription>
                     Así se compara tu rendimiento con una solución optimizada para la misma tarea.
                 </CardDescription>
-            </Header>
+            </CardHeader>
             <CardContent>
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div className="p-4 bg-accent/10 rounded-lg">
