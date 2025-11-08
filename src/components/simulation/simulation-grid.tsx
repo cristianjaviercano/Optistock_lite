@@ -1,10 +1,8 @@
 "use client";
 
-import type { WarehouseLayout } from "@/lib/types";
+import type { WarehouseLayout, OrderItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Package, Package2, PackageCheck, PackageOpen, PackageSearch, CheckCircle2, Truck } from "lucide-react";
 import React from "react";
-import type { OrderItem } from '@/lib/simulation';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -35,9 +33,29 @@ const ForkliftSvg = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => 
         strokeLinecap="round" 
         strokeLinejoin="round"
     >
-        <rect width="18" height="18" x="3" y="3" fill="#FFC700" stroke="none" rx="2" transform="translate(12, 12) scale(0.8) translate(-12, -12)"></rect>
+        <rect width="18" height="18" x="3" y="3" fill="#FFC700" stroke="none" rx="2"></rect>
         <line x1="15" y1="7" x2="21" y2="7" stroke="black"></line>
         <line x1="15" y1="17" x2="21" y2="17" stroke="black"></line>
+    </svg>
+);
+
+const PalletBoxIcon = ({ boxColor, className }: { boxColor: string; className?: string }) => (
+    <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        className={cn("h-full w-full", className)}
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+    >
+        {/* Pallet */}
+        <rect width="20" height="4" x="2" y="18" fill="#D2B48C" rx="1" />
+        <rect width="4" height="2" x="4" y="16" fill="#A0522D" />
+        <rect width="4" height="2" x="16" y="16" fill="#A0522D" />
+
+        {/* Box */}
+        <rect width="16" height="12" x="4" y="4" fill={boxColor} rx="1" stroke="#000" strokeWidth="0.5" />
+        <line x1="4" y1="10" x2="20" y2="10" stroke="#000" strokeOpacity="0.2" strokeWidth="1" />
+        <line x1="12" y1="4" x2="12" y2="10" stroke="#000" strokeOpacity="0.2" strokeWidth="1" />
     </svg>
 );
 
@@ -64,13 +82,14 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
   }
 
   const getOrderItemIcon = (item: OrderItem) => {
+    const commonClasses = "h-5 w-5";
     switch (item.status) {
-      case 'pending': return <Package className="h-5 w-5 text-destructive" />;
-      case 'processing': return <PackageSearch className="h-5 w-5 text-orange-500 animate-pulse" />;
-      case 'processed': return <CheckCircle2 className="h-5 w-5 text-purple-500" />;
-      case 'ready-for-dispatch': return <Truck className="h-5 w-5 text-accent" />;
-      case 'completed': return <PackageCheck className="h-5 w-5 text-green-500" />;
-      default: return null;
+        case 'pending': return <PalletBoxIcon boxColor="hsl(var(--destructive))" className={commonClasses} />;
+        case 'processing': return <PalletBoxIcon boxColor="#f97316" className={cn(commonClasses, "animate-pulse")} />;
+        case 'processed': return <PalletBoxIcon boxColor="#8b5cf6" className={commonClasses} />;
+        case 'ready-for-dispatch': return <PalletBoxIcon boxColor="hsl(var(--accent))" className={commonClasses} />;
+        case 'completed': return <PalletBoxIcon boxColor="#22c55e" className={cn(commonClasses, "opacity-70")} />;
+        default: return null;
     }
   }
 
@@ -97,7 +116,7 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
             {Array.from({ length: gridSize.width }).map((_, x) => {
                const item = layout.find(i => i.x === x && i.y === y) || { id: `${x}-${y}`, type: 'floor', x, y };
                const isPlayerPosition = playerPosition.x === x && playerPosition.y === y;
-               const orderItemOnCell = order.find(o => o.location.x === x && o.location.y === y && o.status !== 'carrying');
+               const orderItemOnCell = order.find(o => (o.location.x === x && o.location.y === y) || (o.origin?.x === x && o.origin?.y === y) && o.status !== 'carrying');
        
                const cellClasses = cn(
                    "aspect-square border flex items-center justify-center transition-colors relative bg-background"
@@ -105,11 +124,11 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
                
                let icon = null;
                 const IconComponent = {
-                    shelf: <div className="w-full h-full bg-primary/20"></div>,
-                    'bay-in': <div className="w-full h-full bg-accent/20"></div>,
-                    'bay-out': <div className="w-full h-full bg-accent/20"></div>,
-                    processing: <div className="w-full h-full bg-chart-3/20"></div>,
-                    forklift: <div className="w-full h-full bg-chart-4/20"></div>,
+                    shelf: <div className="w-full h-full bg-primary/80"></div>,
+                    'bay-in': <div className="w-full h-full bg-accent/80"></div>,
+                    'bay-out': <div className="w-full h-full bg-accent/80"></div>,
+                    processing: <div className="w-full h-full bg-chart-3/80"></div>,
+                    forklift: <div className="w-full h-full bg-chart-4/80"></div>,
                     floor: null,
                 }[item.type];
        
@@ -118,14 +137,16 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
                    {IconComponent}
                    {isPlayerPosition && (
                     <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <ForkliftSvg className={cn("h-full w-full text-foreground transition-transform", getRotationClass(playerDirection), "scale-[0.8]")} />
+                        <ForkliftSvg className={cn("h-full w-full text-foreground transition-transform scale-[0.8]", getRotationClass(playerDirection))} />
                         {carriedItem && (
-                             <Package2 className={cn("h-4 w-4 text-destructive z-20", getForkliftAttachmentClass(playerDirection))} />
+                             <div className={cn("h-3/5 w-3/5 z-20", getForkliftAttachmentClass(playerDirection))}>
+                                <PalletBoxIcon boxColor="hsl(var(--destructive))" />
+                             </div>
                         )}
                     </div>
                    )}
-                   {orderItemOnCell && (
-                       <div className="absolute inset-0 flex items-center justify-center z-5">
+                   {orderItemOnCell && !isPlayerPosition && (
+                       <div className="absolute inset-0 flex items-center justify-center z-5 p-1">
                            {getOrderItemIcon(orderItemOnCell)}
                        </div>
                    )}

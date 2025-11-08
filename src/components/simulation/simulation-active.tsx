@@ -67,8 +67,8 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     const cell = layout.find(item => item.x === x && item.y === y);
     if (!cell) return false;
 
-    // Cannot move onto shelves, in-bays, or out-bays
-    if (['shelf', 'bay-in', 'bay-out'].includes(cell.type)) {
+    // Cannot move onto shelves, processing stations, in-bays, or out-bays
+    if (['shelf', 'bay-in', 'bay-out', 'processing'].includes(cell.type)) {
       return false;
     }
 
@@ -146,7 +146,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
         } 
         // --- Picking up an item ---
         else {
-            const itemToPick = currentOrder.find(o => o.location.x === x && o.location.y === y && o.status === 'pending');
+            const itemToPick = currentOrder.find(o => ((o.location.x === x && o.location.y === y) || (o.origin?.x === x && o.origin?.y === y)) && o.status === 'pending');
             if(itemToPick) {
                 // Check for guided mode
                 if (playMode === 'guided') {
