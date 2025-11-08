@@ -31,7 +31,7 @@ const getSimulationInsights = async (session: GameSession): Promise<{ insights: 
 
 
 export default function ResultsPage({ params }: { params: { gameId: string } }) {
-  const { gameId } = params;
+  const gameId = params.gameId;
   const { user } = useAuth();
   const [session, setSession] = useState<GameSession | null>(null);
   const [insights, setInsights] = useState<string[]>([]);
