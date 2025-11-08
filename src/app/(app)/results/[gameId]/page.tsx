@@ -4,9 +4,10 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/context/auth-context';
 import type { GameSession } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Zap, BrainCircuit } from 'lucide-react';
+import { Loader2, Zap, BrainCircuit, Route, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 // Mocking the AI flow as per instructions, as no flow is provided in `src/ai/flows`.
 // In a real scenario, this would import and call a Genkit flow.
@@ -14,11 +15,16 @@ const getSimulationInsights = async (session: GameSession): Promise<{ insights: 
     console.log("Generating mock AI insights for game:", session.id);
     await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
     
-    const mockInsights = [
+    let mockInsights = [
       `For a ${session.mode} task, your pathing efficiency was moderate. You made ${session.moves} moves. Consider grouping tasks in the same aisle to reduce backtracking.`,
       `Your total cost of $${session.cost.toFixed(2)} is a good starting point. Focusing on reducing your total time of ${session.time}s will have the biggest impact on lowering cost.`,
-      "Your current layout has some distant storage points. For frequently picked items, consider redesigning your warehouse to place them closer to the packing bays for quicker access.",
     ];
+
+    if (session.playMode === 'guided') {
+        mockInsights.push("You completed the simulation in Guided Mode. This is great for learning the optimal flow. Try Free Mode next to test your own strategies!");
+    } else {
+        mockInsights.push("You completed the simulation in Free Mode. This mode tests your ability to prioritize and plan. Review your path to see if a different task order could have been faster.");
+    }
     
     return { insights: mockInsights };
 };
@@ -75,10 +81,21 @@ export default function ResultsPage({ params }: { params: { gameId: string } }) 
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-headline">Simulation Complete!</CardTitle>
-          <CardDescription>
-            Here is the summary of your {session.mode} session from {new Date(session.date).toLocaleString()}.
-          </CardDescription>
+            <div className='flex justify-between items-start'>
+                <div>
+                    <CardTitle className="text-2xl font-headline">Simulation Complete!</CardTitle>
+                    <CardDescription>
+                        Here is the summary of your session from {new Date(session.date).toLocaleString()}.
+                    </CardDescription>
+                </div>
+                 <div className="flex gap-2">
+                    <Badge variant="secondary" className="capitalize">{session.mode}</Badge>
+                    <Badge variant={session.playMode === 'guided' ? 'default' : 'outline'} className="capitalize">
+                        {session.playMode === 'guided' ? <Route className="mr-2 h-4 w-4"/> : <Shuffle className="mr-2 h-4 w-4" />}
+                        {session.playMode}
+                    </Badge>
+                </div>
+            </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">

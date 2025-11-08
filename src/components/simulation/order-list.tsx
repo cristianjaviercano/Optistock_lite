@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import type { GameMode, OrderItemStatus } from '@/lib/types';
 import type { OrderItem } from '@/lib/simulation';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Circle, Package, PackageOpen, PackageSearch } from 'lucide-react';
+import { CheckCircle2, Circle, PackageOpen, PackageSearch, PackageCheck } from 'lucide-react';
 
 interface OrderListProps {
   order: OrderItem[];
@@ -17,7 +17,7 @@ const statusIcons: Record<OrderItemStatus, React.ReactNode> = {
     pending: <Circle className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0"/>,
     carrying: <PackageOpen className="h-5 w-5 text-blue-500 mt-0.5 shrink-0"/>,
     processing: <PackageSearch className="h-5 w-5 text-orange-500 mt-0.5 shrink-0 animate-pulse"/>,
-    completed: <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 shrink-0"/>,
+    completed: <PackageCheck className="h-5 w-5 text-green-500 mt-0.5 shrink-0"/>,
 }
 
 const getStatusText = (item: OrderItem, mode: GameMode): string => {
@@ -27,9 +27,10 @@ const getStatusText = (item: OrderItem, mode: GameMode): string => {
                 ? `Recoger de: ${String.fromCharCode(65 + item.location.x)}${item.location.y + 1}`
                 : `Recoger de bahía de entrada y llevar a: ${String.fromCharCode(65 + item.location.x)}${item.location.y + 1}`;
         case 'carrying':
-            return mode === 'picking'
-                ? `Llevar a zona de procesamiento`
-                : `Llevar a: ${String.fromCharCode(65 + item.location.x)}${item.location.y + 1}`;
+            if (mode === 'picking') {
+                return `Llevar a zona de procesamiento`
+            }
+            return `Llevar a: ${String.fromCharCode(65 + item.location.x)}${item.location.y + 1}`;
         case 'processing':
             return 'En procesamiento...';
         case 'completed':

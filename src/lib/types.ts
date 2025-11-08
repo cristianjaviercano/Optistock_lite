@@ -29,12 +29,14 @@ export interface NamedWarehouseLayout {
 }
 
 export type GameMode = 'picking' | 'stocking';
+export type PlayMode = 'guided' | 'free';
 
 export interface GameSession {
   id:string;
   userId: string;
   date: string;
   mode: GameMode;
+  playMode: PlayMode;
   time: number; // in seconds
   moves: number;
   cost: number;

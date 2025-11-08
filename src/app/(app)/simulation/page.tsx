@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/auth-context';
-import type { GameMode, WarehouseLayout, NamedWarehouseLayout } from '@/lib/types';
+import type { GameMode, WarehouseLayout, NamedWarehouseLayout, PlayMode } from '@/lib/types';
 import { generateInventory, generateOrder, findStartBay } from '@/lib/simulation';
 import SimulationSetup from '@/components/simulation/simulation-setup';
 import SimulationActive from '@/components/simulation/simulation-active';
@@ -20,6 +20,7 @@ export default function SimulationPage() {
   const [selectedLayout, setSelectedLayout] = useState<WarehouseLayout | null>(null);
   const [gameState, setGameState] = useState<'setup' | 'active' | 'finished'>('setup');
   const [gameMode, setGameMode] = useState<GameMode>('picking');
+  const [playMode, setPlayMode] = useState<PlayMode>('free');
   const [order, setOrder] = useState<OrderItem[]>([]);
   const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 0 });
   const [loading, setLoading] = useState(true);
@@ -40,7 +41,7 @@ export default function SimulationPage() {
     }
   }, [user]);
 
-  const handleStartGame = (mode: GameMode, layout: WarehouseLayout) => {
+  const handleStartGame = (mode: GameMode, layout: WarehouseLayout, playMode: PlayMode) => {
     const startPosition = findStartBay(layout);
     if (startPosition) {
       setPlayerPosition(startPosition);
@@ -51,6 +52,7 @@ export default function SimulationPage() {
     const newOrder = generateOrder(layoutWithInventory, mode, 5);
     setOrder(newOrder);
     setGameMode(mode);
+    setPlayMode(playMode);
     setGameState('active');
   };
   
@@ -62,6 +64,7 @@ export default function SimulationPage() {
       userId: user.id,
       date: new Date().toISOString(),
       mode: gameMode,
+      playMode: playMode,
       ...finalStats,
       layout: selectedLayout,
     };
@@ -103,6 +106,7 @@ export default function SimulationPage() {
           layout={selectedLayout}
           order={order}
           mode={gameMode}
+          playMode={playMode}
           initialPlayerPosition={playerPosition}
           onGameEnd={handleGameEnd}
         />

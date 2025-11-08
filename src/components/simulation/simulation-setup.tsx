@@ -4,19 +4,20 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import type { GameMode, WarehouseLayout, NamedWarehouseLayout } from '@/lib/types';
-import { PackageSearch, PackagePlus, Warehouse } from 'lucide-react';
+import type { GameMode, WarehouseLayout, NamedWarehouseLayout, PlayMode } from '@/lib/types';
+import { PackageSearch, PackagePlus, Warehouse, Route, Shuffle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 interface SimulationSetupProps {
   savedLayouts: Record<string, NamedWarehouseLayout>;
-  onStart: (mode: GameMode, layout: WarehouseLayout) => void;
+  onStart: (mode: GameMode, layout: WarehouseLayout, playMode: PlayMode) => void;
 }
 
 export default function SimulationSetup({ savedLayouts, onStart }: SimulationSetupProps) {
   const [mode, setMode] = useState<GameMode>('picking');
+  const [playMode, setPlayMode] = useState<PlayMode>('free');
   const [selectedSlot, setSelectedSlot] = useState<string>(Object.keys(savedLayouts)[0] || '');
   const { toast } = useToast();
 
@@ -30,7 +31,7 @@ export default function SimulationSetup({ savedLayouts, onStart }: SimulationSet
       return;
     }
     const layoutToSimulate = savedLayouts[selectedSlot].layout;
-    onStart(mode, layoutToSimulate);
+    onStart(mode, layoutToSimulate, playMode);
   }
 
   return (
@@ -61,7 +62,7 @@ export default function SimulationSetup({ savedLayouts, onStart }: SimulationSet
           </div>
 
           <div className='text-left'>
-            <Label>Simulation Mode</Label>
+            <Label>Simulation Task Mode</Label>
             <ToggleGroup
               type="single"
               value={mode}
@@ -77,6 +78,27 @@ export default function SimulationSetup({ savedLayouts, onStart }: SimulationSet
                 <PackagePlus className="h-8 w-8 text-accent" />
                 <span className="font-semibold text-lg">Stocking</span>
                 <p className="text-sm text-muted-foreground whitespace-normal">Restock inventory by moving items to their designated shelves.</p>
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+          
+          <div className='text-left'>
+            <Label>Play Style</Label>
+            <ToggleGroup
+              type="single"
+              value={playMode}
+              onValueChange={(value: PlayMode) => value && setPlayMode(value)}
+              className="grid grid-cols-2 gap-4 w-full"
+            >
+              <ToggleGroupItem value="guided" aria-label="Guided Mode" className="flex flex-col h-auto p-6 gap-2 text-center">
+                <Route className="h-8 w-8 text-primary" />
+                <span className="font-semibold text-lg">Guided</span>
+                <p className="text-sm text-muted-foreground whitespace-normal">Must complete tasks in the order they are listed.</p>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="free" aria-label="Free Mode" className="flex flex-col h-auto p-6 gap-2 text-center">
+                <Shuffle className="h-8 w-8 text-accent" />
+                <span className="font-semibold text-lg">Free</span>
+                <p className="text-sm text-muted-foreground whitespace-normal">Complete tasks in any order you choose.</p>
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
