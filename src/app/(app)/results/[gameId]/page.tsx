@@ -31,6 +31,7 @@ const getSimulationInsights = async (session: GameSession): Promise<{ insights: 
 
 
 export default function ResultsPage({ params }: { params: { gameId: string } }) {
+  const { gameId } = params;
   const { user } = useAuth();
   const [session, setSession] = useState<GameSession | null>(null);
   const [insights, setInsights] = useState<string[]>([]);
@@ -38,12 +39,12 @@ export default function ResultsPage({ params }: { params: { gameId: string } }) 
   const [insightsLoading, setInsightsLoading] = useState(true);
 
   useEffect(() => {
-    if (user && params.gameId) {
+    if (user && gameId) {
       const historyJson = localStorage.getItem(`optistock_history_${user.id}`);
       if (historyJson) {
         try {
           const history: GameSession[] = JSON.parse(historyJson);
-          const foundSession = history.find(s => s.id === params.gameId);
+          const foundSession = history.find(s => s.id === gameId);
           if (foundSession) {
             setSession(foundSession);
             getSimulationInsights(foundSession).then(result => {
@@ -57,7 +58,7 @@ export default function ResultsPage({ params }: { params: { gameId: string } }) 
       }
       setLoading(false);
     }
-  }, [user, params.gameId]);
+  }, [user, gameId]);
 
   if (loading) {
     return <div className="flex h-full min-h-[500px] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
