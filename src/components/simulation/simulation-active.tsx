@@ -290,6 +290,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
                   carriedItem={carriedItem}
               />
           </div>
+          {/* Touch controls for mobile/tablet */}
           <Card className="lg:hidden">
               <CardContent className="p-4 flex flex-col gap-4">
                   <div className="flex justify-center items-center gap-2">
@@ -310,6 +311,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
         </div>
         <div className="flex flex-col gap-6">
           <OrderList order={currentOrder} mode={mode} />
+           {/* Touch controls for desktop */}
           <Card className="hidden lg:block">
               <CardContent className="p-4 flex flex-col gap-4">
                   <div className="flex justify-center items-center gap-2">
