@@ -68,7 +68,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     if (!cell) return false;
 
     // Cannot move onto shelves, in-bays, or out-bays
-    if (['shelf'].includes(cell.type)) {
+    if (['shelf', 'bay-in', 'bay-out'].includes(cell.type)) {
       return false;
     }
 
@@ -87,7 +87,13 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
   }, [layout, gridSize, currentOrder]);
 
   const handleMove = useCallback((moveDirection: Direction) => {
-    setDirection(moveDirection);
+    // If the pressed direction is different from the current direction, just turn.
+    if (direction !== moveDirection) {
+        setDirection(moveDirection);
+        return;
+    }
+
+    // If the direction is the same, attempt to move.
     let dx = 0, dy = 0;
     switch(moveDirection) {
       case 'up': dy = -1; break;
@@ -103,7 +109,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
       setPlayerPosition({ x: newX, y: newY });
       setMoves(prev => prev + 1);
     }
-  }, [playerPosition, isMoveValid]);
+  }, [playerPosition, direction, isMoveValid]);
   
   const handleInteraction = () => {
     const interactionCell = getAdjacentCell();
