@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import type { GameMode, OrderItemStatus } from '@/lib/types';
 import type { OrderItem } from '@/lib/simulation';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Circle, PackageOpen, PackageSearch, PackageCheck } from 'lucide-react';
+import { CheckCircle2, Circle, PackageOpen, PackageSearch, PackageCheck, Truck } from 'lucide-react';
 
 interface OrderListProps {
   order: OrderItem[];
@@ -18,6 +18,7 @@ const statusIcons: Record<OrderItemStatus, React.ReactNode> = {
     carrying: <PackageOpen className="h-5 w-5 text-blue-500 mt-0.5 shrink-0"/>,
     processing: <PackageSearch className="h-5 w-5 text-orange-500 mt-0.5 shrink-0 animate-pulse"/>,
     processed: <CheckCircle2 className="h-5 w-5 text-purple-500 mt-0.5 shrink-0"/>,
+    'ready-for-dispatch': <Truck className="h-5 w-5 text-accent mt-0.5 shrink-0"/>,
     completed: <PackageCheck className="h-5 w-5 text-green-500 mt-0.5 shrink-0"/>,
 }
 
@@ -29,13 +30,19 @@ const getStatusText = (item: OrderItem, mode: GameMode): string => {
                 : `Recoger de bahía de entrada y llevar a: ${String.fromCharCode(65 + item.location.x)}${item.location.y + 1}`;
         case 'carrying':
             if (mode === 'picking') {
-                return `Llevar a zona de procesamiento`
+                if (item.productId.startsWith('new-item')) { // This is a stocking item logic, but might be needed if modes get mixed
+                     return `Llevar a: ${String.fromCharCode(65 + item.location.x)}${item.location.y + 1}`;
+                }
+                const isProcessed = item.status === 'processed' || item.status === 'ready-for-dispatch'; // A bit of a hack to know if it came from processing
+                 return `Llevar a zona de procesamiento`
             }
             return `Llevar a: ${String.fromCharCode(65 + item.location.x)}${item.location.y + 1}`;
         case 'processing':
             return 'En procesamiento...';
         case 'processed':
-            return `Listo para despacho. Llévalo a una bahía de salida.`;
+            return `Listo. Llévalo a una bahía de salida.`;
+        case 'ready-for-dispatch':
+            return `En bahía de salida. Esperando despacho.`;
         case 'completed':
             return 'Completado';
         default:

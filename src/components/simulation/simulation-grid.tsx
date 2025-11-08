@@ -2,7 +2,7 @@
 
 import type { WarehouseLayout } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Forklift as ForkliftIcon, Package, Package2, PackageCheck, PackageOpen, PackageSearch, CheckCircle2 } from "lucide-react";
+import { Forklift as ForkliftIcon, Package, Package2, PackageCheck, PackageOpen, PackageSearch, CheckCircle2, Truck } from "lucide-react";
 import React from "react";
 import type { OrderItem } from '@/lib/simulation';
 
@@ -49,6 +49,7 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
       case 'pending': return <Package className="h-5 w-5 text-destructive" />;
       case 'processing': return <PackageSearch className="h-5 w-5 text-orange-500 animate-pulse" />;
       case 'processed': return <CheckCircle2 className="h-5 w-5 text-purple-500" />;
+      case 'ready-for-dispatch': return <Truck className="h-5 w-5 text-accent" />;
       case 'completed': return <PackageCheck className="h-5 w-5 text-green-500" />;
       default: return null;
     }

@@ -10,7 +10,7 @@ import OrderList from './order-list';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { Gamepad, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Gamepad, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Truck } from 'lucide-react';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -62,8 +62,10 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     const isProcessingItemThere = currentOrder.some(o => o.location.x === x && o.location.y === y && o.status === 'processing');
     if (isProcessingCell && isProcessingItemThere) return false;
     
-    // Cannot move onto a dispatch or in-bay
-    if(cell?.type === 'bay-in' || cell?.type === 'bay-out') return false;
+    // Can move onto bays, but cannot move through items ready for dispatch
+    const isBayOutCell = cell?.type === 'bay-out';
+    const isReadyForDispatchItemThere = currentOrder.some(o => o.location.x === x && o.location.y === y && o.status === 'ready-for-dispatch');
+    if (isBayOutCell && isReadyForDispatchItemThere) return false;
 
     // Cannot move onto a cell with a pending item
     const hasPendingOrder = currentOrder.some(o => o.location.x === x && o.location.y === y && o.status === 'pending');
@@ -113,8 +115,8 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
 
             } // Drop at dispatch bay
             else if (interactionCell.type === 'bay-out' && carriedItem.status === 'processed') {
-                toast({ title: "¡Artículo Despachado!", description: `${carriedItem.productName} ha sido despachado.`});
-                setCurrentOrder(prev => prev.map(o => o.productId === carriedItem!.productId ? {...o, status: 'completed', location: {x, y}} : o));
+                toast({ title: "¡Listo para despachar!", description: `${carriedItem.productName} está en la bahía de salida.`});
+                setCurrentOrder(prev => prev.map(o => o.productId === carriedItem!.productId ? {...o, status: 'ready-for-dispatch', location: {x, y}} : o));
                 setCarriedItem(null);
             } else {
                 toast({ variant: "destructive", title: "Ubicación incorrecta", description: "Este no es el punto de entrega correcto."})
@@ -143,6 +145,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
             const itemToDispatch = currentOrder.find(o => o.location.x === x && o.location.y === y && o.status === 'processed');
             if (itemToDispatch && interactionCell.type === 'processing') {
                 setCarriedItem({...itemToDispatch, status: 'processed'});
+                 setCurrentOrder(prev => prev.map(o => o.productId === itemToDispatch.productId ? {...o, status: 'carrying'}: o));
                 toast({ title: `¡Artículo listo!`, description: `Lleva ${itemToDispatch.productName} a una bahía de despacho.` });
             }
         }
@@ -179,6 +182,17 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
         }
     }
   };
+
+  const handleDispatch = () => {
+    const itemsToDispatch = currentOrder.filter(o => o.status === 'ready-for-dispatch');
+    if (itemsToDispatch.length === 0) {
+        toast({ variant: "destructive", title: "Nada para despachar", description: "No hay paquetes en las bahías de salida."});
+        return;
+    }
+
+    setCurrentOrder(prev => prev.map(o => o.status === 'ready-for-dispatch' ? { ...o, status: 'completed' } : o));
+    toast({ title: "¡Despacho completo!", description: `${itemsToDispatch.length} paquete(s) han sido enviados.`});
+  }
   
   useEffect(() => {
     // Check for game end
@@ -212,6 +226,8 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
   useEffect(() => {
     setCost(calculateCost(moves, time));
   }, [moves, time]);
+  
+  const showDispatchButton = mode === 'picking' && currentOrder.some(o => o.status === 'ready-for-dispatch' || o.status === 'processed' || o.status === 'carrying');
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -228,8 +244,9 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
             />
         </div>
         <Card className="lg:hidden">
-            <CardContent className="p-4">
-                <Button onClick={handleInteraction} className="w-full">Interact</Button>
+            <CardContent className="p-4 flex gap-2">
+                <Button onClick={handleInteraction} className="w-full">Interactuar</Button>
+                {showDispatchButton && <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90"><Truck className="mr-2"/>Despacho</Button>}
             </CardContent>
         </Card>
       </div>
@@ -252,7 +269,8 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
                          <Button variant="outline" size="icon" onClick={() => handleMove(0, 1)}><ArrowDown/></Button>
                     </div>
                 </div>
-                <p className="text-xs text-muted-foreground text-center">Use arrow keys to move and Space/Enter to interact.</p>
+                {showDispatchButton && <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90"><Truck className="mr-2"/>Despacho</Button>}
+                <p className="text-xs text-muted-foreground text-center">Usa las flechas para moverte y Espacio/Enter para interactuar.</p>
             </CardContent>
         </Card>
       </div>
