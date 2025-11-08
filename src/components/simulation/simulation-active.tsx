@@ -12,6 +12,8 @@ import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Gamepad, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 
+type Direction = 'up' | 'down' | 'left' | 'right';
+
 interface SimulationActiveProps {
   layout: WarehouseLayout;
   order: OrderItem[];
@@ -23,6 +25,7 @@ interface SimulationActiveProps {
 export default function SimulationActive({ layout, order, mode, initialPlayerPosition, onGameEnd }: SimulationActiveProps) {
   const { toast } = useToast();
   const [playerPosition, setPlayerPosition] = useState(initialPlayerPosition);
+  const [direction, setDirection] = useState<Direction>('right');
   const [currentOrder, setCurrentOrder] = useState<OrderItem[]>(order);
   const [time, setTime] = useState(0);
   const [moves, setMoves] = useState(0);
@@ -42,6 +45,12 @@ export default function SimulationActive({ layout, order, mode, initialPlayerPos
   const handleMove = useCallback((dx: number, dy: number) => {
     const newX = playerPosition.x + dx;
     const newY = playerPosition.y + dy;
+    
+    if (dx === 1) setDirection('right');
+    else if (dx === -1) setDirection('left');
+    else if (dy === 1) setDirection('down');
+    else if (dy === -1) setDirection('up');
+
     if (isMoveValid(newX, newY)) {
       setPlayerPosition({ x: newX, y: newY });
       setMoves(prev => prev + 1);
@@ -113,6 +122,7 @@ export default function SimulationActive({ layout, order, mode, initialPlayerPos
                 layout={layout}
                 gridSize={gridSize}
                 playerPosition={playerPosition}
+                playerDirection={direction}
                 order={currentOrder}
             />
         </div>
