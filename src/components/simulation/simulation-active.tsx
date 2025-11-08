@@ -10,7 +10,17 @@ import OrderList from './order-list';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { Gamepad, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Truck, MoveUp } from 'lucide-react';
+import { Gamepad, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Truck } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -21,9 +31,10 @@ interface SimulationActiveProps {
   playMode: PlayMode;
   initialPlayerPosition: { x: number; y: number };
   onGameEnd: (finalStats: { time: number, moves: number, cost: number }) => void;
+  onNewOrder: () => void;
 }
 
-export default function SimulationActive({ layout, order, mode, playMode, initialPlayerPosition, onGameEnd }: SimulationActiveProps) {
+export default function SimulationActive({ layout, order, mode, playMode, initialPlayerPosition, onGameEnd, onNewOrder }: SimulationActiveProps) {
   const { toast } = useToast();
   const [playerPosition, setPlayerPosition] = useState(initialPlayerPosition);
   const [direction, setDirection] = useState<Direction>('right');
@@ -32,6 +43,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
   const [time, setTime] = useState(0);
   const [moves, setMoves] = useState(0);
   const [cost, setCost] = useState(0);
+  const [isOrderComplete, setIsOrderComplete] = useState(false);
 
   const gridSize = {
       width: Math.max(...layout.map(i => i.x)) + 1,
@@ -56,7 +68,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     if (!cell) return false;
 
     // Cannot move onto shelves, in-bays, or out-bays
-    if (['shelf', 'bay-in', 'bay-out'].includes(cell.type)) {
+    if (['shelf'].includes(cell.type)) {
       return false;
     }
 
@@ -197,13 +209,21 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     setCurrentOrder(prev => prev.map(o => o.status === 'ready-for-dispatch' ? { ...o, status: 'completed' } : o));
     toast({ title: "¡Despacho completo!", description: `${itemsToDispatch.length} paquete(s) han sido enviados.`});
   }
-  
+
   useEffect(() => {
-    // Check for game end
     if (currentOrder.length > 0 && currentOrder.every(item => item.status === 'completed' && !carriedItem)) {
-      onGameEnd({ time, moves, cost });
+      setIsOrderComplete(true);
     }
-  }, [currentOrder, onGameEnd, time, moves, cost, carriedItem]);
+  }, [currentOrder, carriedItem]);
+
+  useEffect(() => {
+    setCurrentOrder(order.map(o => ({...o, status: 'pending' })));
+    setPlayerPosition(initialPlayerPosition);
+    setDirection('right');
+    setCarriedItem(null);
+    setTime(0);
+    setMoves(0);
+  }, [order, initialPlayerPosition]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -227,57 +247,85 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
   }, [handleMove, handleInteraction, mode]);
 
   useEffect(() => {
-    const timer = setInterval(() => setTime(prev => prev + 1), 1000);
+    let timer: NodeJS.Timeout;
+    if (!isOrderComplete) {
+      timer = setInterval(() => setTime(prev => prev + 1), 1000);
+    }
     return () => clearInterval(timer);
-  }, []);
+  }, [isOrderComplete]);
 
   useEffect(() => {
     setCost(calculateCost(moves, time));
   }, [moves, time]);
+
+  const handleFinish = () => {
+    onGameEnd({ time, moves, cost });
+  }
+
+  const handleContinue = () => {
+    setIsOrderComplete(false);
+    onNewOrder();
+  }
   
   const showDispatchButton = mode === 'picking' && currentOrder.some(o => o.status === 'ready-for-dispatch' || o.status === 'processed' || o.status === 'carrying');
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 flex flex-col gap-6">
-        <MetricsDashboard time={time} moves={moves} cost={cost} />
-        <div className="w-full overflow-x-auto rounded-lg border bg-card p-2 shadow-inner md:p-4">
-            <SimulationGrid
-                layout={layout}
-                gridSize={gridSize}
-                playerPosition={playerPosition}
-                playerDirection={direction}
-                order={currentOrder}
-                carriedItem={carriedItem}
-            />
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <MetricsDashboard time={time} moves={moves} cost={cost} />
+          <div className="w-full overflow-x-auto rounded-lg border bg-card p-2 shadow-inner md:p-4">
+              <SimulationGrid
+                  layout={layout}
+                  gridSize={gridSize}
+                  playerPosition={playerPosition}
+                  playerDirection={direction}
+                  order={currentOrder}
+                  carriedItem={carriedItem}
+              />
+          </div>
+          <Card className="lg:hidden">
+              <CardContent className="p-4 flex gap-2">
+                  <Button onClick={handleInteraction} className="w-full">Interactuar</Button>
+                  {showDispatchButton && <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90"><Truck className="mr-2"/>Despacho</Button>}
+              </CardContent>
+          </Card>
         </div>
-        <Card className="lg:hidden">
-            <CardContent className="p-4 flex gap-2">
-                <Button onClick={handleInteraction} className="w-full">Interactuar</Button>
-                {showDispatchButton && <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90"><Truck className="mr-2"/>Despacho</Button>}
-            </CardContent>
-        </Card>
+        <div className="flex flex-col gap-6">
+          <OrderList order={currentOrder} mode={mode} />
+          <Card className="hidden lg:block">
+              <CardContent className="p-4 flex flex-col gap-4">
+                  <div className="flex justify-center items-center gap-2">
+                       <Button variant="outline" size="icon" onClick={() => handleMove('up')}><ArrowUp/></Button>
+                  </div>
+                  <div className="flex justify-center items-center gap-2">
+                      <Button variant="outline" size="icon" onClick={() => handleMove('left')}><ArrowLeft/></Button>
+                       <Button onClick={handleInteraction} className="p-6 h-auto aspect-square bg-primary/20"><Gamepad className="w-6 h-6"/></Button>
+                      <Button variant="outline" size="icon" onClick={() => handleMove('right')}><ArrowRight/></Button>
+                  </div>
+                  <div className="flex justify-center items-center gap-2">
+                       <Button variant="outline" size="icon" onClick={() => handleMove('down')}><ArrowDown/></Button>
+                  </div>
+                  {showDispatchButton && <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90"><Truck className="mr-2"/>Despacho (D)</Button>}
+                  <p className="text-xs text-muted-foreground text-center">Usa las flechas para moverte, Espacio/Enter para interactuar.</p>
+              </CardContent>
+          </Card>
+        </div>
       </div>
-      <div className="flex flex-col gap-6">
-        <OrderList order={currentOrder} mode={mode} />
-        <Card className="hidden lg:block">
-            <CardContent className="p-4 flex flex-col gap-4">
-                <div className="flex justify-center items-center gap-2">
-                     <Button variant="outline" size="icon" onClick={() => handleMove('up')}><ArrowUp/></Button>
-                </div>
-                <div className="flex justify-center items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={() => handleMove('left')}><ArrowLeft/></Button>
-                     <Button onClick={handleInteraction} className="p-6 h-auto aspect-square bg-primary/20"><Gamepad className="w-6 h-6"/></Button>
-                    <Button variant="outline" size="icon" onClick={() => handleMove('right')}><ArrowRight/></Button>
-                </div>
-                <div className="flex justify-center items-center gap-2">
-                     <Button variant="outline" size="icon" onClick={() => handleMove('down')}><ArrowDown/></Button>
-                </div>
-                {showDispatchButton && <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90"><Truck className="mr-2"/>Despacho (D)</Button>}
-                <p className="text-xs text-muted-foreground text-center">Usa las flechas para moverte, Espacio/Enter para interactuar.</p>
-            </CardContent>
-        </Card>
-      </div>
-    </div>
+      <AlertDialog open={isOrderComplete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¡Orden Completada!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Has completado todas las tareas de la orden actual. ¿Qué te gustaría hacer ahora?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleContinue}>Continuar con la siguiente orden</AlertDialogAction>
+            <AlertDialogCancel onClick={handleFinish}>Terminar simulación</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

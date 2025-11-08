@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/auth-context';
 import type { GameMode, WarehouseLayout, NamedWarehouseLayout, PlayMode } from '@/lib/types';
 import { generateInventory, generateOrder, findStartBay } from '@/lib/simulation';
@@ -41,18 +41,27 @@ export default function SimulationPage() {
     }
   }, [user]);
 
+  const generateNewOrder = useCallback(() => {
+    if (!selectedLayout) return;
+    const layoutWithInventory = generateInventory(selectedLayout);
+    const newOrder = generateOrder(layoutWithInventory, gameMode, 5);
+    setOrder(newOrder);
+  }, [selectedLayout, gameMode]);
+
   const handleStartGame = (mode: GameMode, layout: WarehouseLayout, playMode: PlayMode) => {
     const startPosition = findStartBay(layout);
     if (startPosition) {
       setPlayerPosition(startPosition);
     }
     
+    setGameMode(mode);
+    setPlayMode(playMode);
     setSelectedLayout(layout);
+    
     const layoutWithInventory = generateInventory(layout);
     const newOrder = generateOrder(layoutWithInventory, mode, 5);
     setOrder(newOrder);
-    setGameMode(mode);
-    setPlayMode(playMode);
+
     setGameState('active');
   };
   
@@ -109,6 +118,7 @@ export default function SimulationPage() {
           playMode={playMode}
           initialPlayerPosition={playerPosition}
           onGameEnd={handleGameEnd}
+          onNewOrder={generateNewOrder}
         />
       )
   }
