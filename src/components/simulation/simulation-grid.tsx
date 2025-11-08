@@ -35,7 +35,7 @@ const ForkliftSvg = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => 
         strokeLinecap="round" 
         strokeLinejoin="round"
     >
-        <rect width="18" height="18" x="3" y="3" fill="#FFC700" stroke="none" rx="2"></rect>
+        <rect width="18" height="18" x="3" y="3" fill="#FFC700" stroke="none" rx="2" transform="translate(12, 12) scale(0.8) translate(-12, -12)"></rect>
         <line x1="15" y1="7" x2="21" y2="7" stroke="black"></line>
         <line x1="15" y1="17" x2="21" y2="17" stroke="black"></line>
     </svg>
@@ -118,7 +118,7 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
                    {IconComponent}
                    {isPlayerPosition && (
                     <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <ForkliftSvg className={cn("h-6 w-6 text-foreground transition-transform", getRotationClass(playerDirection))} />
+                        <ForkliftSvg className={cn("h-full w-full text-foreground transition-transform", getRotationClass(playerDirection))} />
                         {carriedItem && (
                              <Package2 className={cn("h-4 w-4 text-destructive z-20", getForkliftAttachmentClass(playerDirection))} />
                         )}
@@ -137,3 +137,5 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
     </div>
   );
 }
+
+    

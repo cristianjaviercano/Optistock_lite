@@ -10,7 +10,7 @@ import OrderList from './order-list';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { Gamepad, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Truck } from 'lucide-react';
+import { Gamepad, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Truck, MoveUp } from 'lucide-react';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -74,20 +74,27 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     return true;
   }, [layout, gridSize, currentOrder]);
 
-  const handleMove = useCallback((dx: number, dy: number) => {
+  const handleSetDirection = (newDirection: Direction) => {
+    setDirection(newDirection);
+  };
+  
+  const handleMoveForward = useCallback(() => {
+    let dx = 0, dy = 0;
+    switch(direction) {
+      case 'up': dy = -1; break;
+      case 'down': dy = 1; break;
+      case 'left': dx = -1; break;
+      case 'right': dx = 1; break;
+    }
+
     const newX = playerPosition.x + dx;
     const newY = playerPosition.y + dy;
-    
-    if (dx === 1) setDirection('right');
-    else if (dx === -1) setDirection('left');
-    else if (dy === 1) setDirection('down');
-    else if (dy === -1) setDirection('up');
 
     if (isMoveValid(newX, newY)) {
       setPlayerPosition({ x: newX, y: newY });
       setMoves(prev => prev + 1);
     }
-  }, [playerPosition, isMoveValid]);
+  }, [playerPosition, direction, isMoveValid]);
   
   const handleInteraction = () => {
     const interactionCell = getAdjacentCell();
@@ -205,10 +212,13 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     const handleKeyDown = (e: KeyboardEvent) => {
       e.preventDefault();
       switch (e.key) {
-        case 'ArrowUp': handleMove(0, -1); break;
-        case 'ArrowDown': handleMove(0, 1); break;
-        case 'ArrowLeft': handleMove(-1, 0); break;
-        case 'ArrowRight': handleMove(1, 0); break;
+        case 'ArrowUp': handleSetDirection('up'); break;
+        case 'ArrowDown': handleSetDirection('down'); break;
+        case 'ArrowLeft': handleSetDirection('left'); break;
+        case 'ArrowRight': handleSetDirection('right'); break;
+        case 'w':
+        case 'W':
+             handleMoveForward(); break;
         case ' ':
         case 'Enter':
           handleInteraction(); break;
@@ -216,7 +226,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleMove, handleInteraction]);
+  }, [handleMoveForward, handleInteraction]);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(prev => prev + 1), 1000);
@@ -255,25 +265,24 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
         <Card className="hidden lg:block">
             <CardContent className="p-4 flex flex-col gap-4">
                 <div className="flex justify-center items-center gap-2">
-                    <div className="flex flex-col items-center">
-                        <Button variant="outline" size="icon" onClick={() => handleMove(0, -1)}><ArrowUp/></Button>
-                    </div>
+                     <Button variant="outline" size="icon" onClick={() => handleSetDirection('up')}><ArrowUp/></Button>
                 </div>
                 <div className="flex justify-center items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={() => handleMove(-1, 0)}><ArrowLeft/></Button>
-                    <Button variant="outline" size="icon" onClick={handleInteraction} className="bg-primary/20"><Gamepad/></Button>
-                    <Button variant="outline" size="icon" onClick={() => handleMove(1, 0)}><ArrowRight/></Button>
+                    <Button variant="outline" size="icon" onClick={() => handleSetDirection('left')}><ArrowLeft/></Button>
+                    <Button variant="outline" size="icon" onClick={handleMoveForward}><MoveUp /></Button>
+                    <Button variant="outline" size="icon" onClick={() => handleSetDirection('right')}><ArrowRight/></Button>
                 </div>
                 <div className="flex justify-center items-center gap-2">
-                    <div className="flex flex-col items-center">
-                         <Button variant="outline" size="icon" onClick={() => handleMove(0, 1)}><ArrowDown/></Button>
-                    </div>
+                     <Button variant="outline" size="icon" onClick={() => handleSetDirection('down')}><ArrowDown/></Button>
                 </div>
+                 <Button onClick={handleInteraction} className="w-full bg-primary/20"><Gamepad className="mr-2"/>Interactuar</Button>
                 {showDispatchButton && <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90"><Truck className="mr-2"/>Despacho</Button>}
-                <p className="text-xs text-muted-foreground text-center">Usa las flechas para moverte y Espacio/Enter para interactuar.</p>
+                <p className="text-xs text-muted-foreground text-center">Usa las flechas para girar, 'W' para avanzar y Espacio/Enter para interactuar.</p>
             </CardContent>
         </Card>
       </div>
     </div>
   );
 }
+
+    
