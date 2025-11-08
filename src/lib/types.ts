@@ -40,3 +40,13 @@ export interface GameSession {
   cost: number;
   layout: WarehouseLayout;
 }
+
+export type OrderItemStatus = 'pending' | 'carrying' | 'processing' | 'completed';
+
+export interface OrderItem {
+  productId: string;
+  productName: string;
+  location: { x: number; y: number };
+  quantity: number;
+  status: OrderItemStatus;
+}

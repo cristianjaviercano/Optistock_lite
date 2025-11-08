@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import type { WarehouseLayout, GameMode } from '@/lib/types';
+import type { WarehouseLayout, GameMode, WarehouseItem } from '@/lib/types';
 import type { OrderItem } from '@/lib/simulation';
-import { calculateCost } from '@/lib/simulation';
+import { calculateCost, findStartBay } from '@/lib/simulation';
 import SimulationGrid from './simulation-grid';
 import MetricsDashboard from './metrics-dashboard';
 import OrderList from './order-list';
@@ -26,7 +26,8 @@ export default function SimulationActive({ layout, order, mode, initialPlayerPos
   const { toast } = useToast();
   const [playerPosition, setPlayerPosition] = useState(initialPlayerPosition);
   const [direction, setDirection] = useState<Direction>('right');
-  const [currentOrder, setCurrentOrder] = useState<OrderItem[]>(order);
+  const [currentOrder, setCurrentOrder] = useState<OrderItem[]>(order.map(o => ({...o, status: 'pending' })));
+  const [carriedItem, setCarriedItem] = useState<OrderItem | null>(null);
   const [time, setTime] = useState(0);
   const [moves, setMoves] = useState(0);
   const [cost, setCost] = useState(0);
@@ -35,13 +36,25 @@ export default function SimulationActive({ layout, order, mode, initialPlayerPos
       width: Math.max(...layout.map(i => i.x)) + 1,
       height: Math.max(...layout.map(i => i.y)) + 1,
   };
+  
+  const getAdjacentCell = useCallback(() => {
+    const { x, y } = playerPosition;
+    switch (direction) {
+        case 'up': return { x, y: y - 1 };
+        case 'down': return { x, y: y + 1 };
+        case 'left': return { x: x - 1, y };
+        case 'right': return { x: x + 1, y };
+    }
+  }, [playerPosition, direction]);
 
   const isMoveValid = useCallback((x: number, y: number) => {
     if (x < 0 || x >= gridSize.width || y < 0 || y >= gridSize.height) return false;
     const cell = layout.find(item => item.x === x && item.y === y);
-    // Forklift can only move on floor, bays, processing areas, and forklift zones. Not shelves.
-    return cell?.type !== 'shelf';
-  }, [layout, gridSize]);
+    // Forklift can't move on shelves or cells with pending order items.
+    const hasPendingOrder = currentOrder.some(o => o.location.x === x && o.location.y === y && o.status === 'pending');
+    
+    return cell?.type !== 'shelf' && !hasPendingOrder;
+  }, [layout, gridSize, currentOrder]);
 
   const handleMove = useCallback((dx: number, dy: number) => {
     const newX = playerPosition.x + dx;
@@ -57,34 +70,46 @@ export default function SimulationActive({ layout, order, mode, initialPlayerPos
       setMoves(prev => prev + 1);
     }
   }, [playerPosition, isMoveValid]);
-
+  
   const handleInteraction = () => {
-    const adjacentCells = [
-      { x: playerPosition.x, y: playerPosition.y - 1 }, // up
-      { x: playerPosition.x, y: playerPosition.y + 1 }, // down
-      { x: playerPosition.x - 1, y: playerPosition.y }, // left
-      { x: playerPosition.x + 1, y: playerPosition.y }, // right
-    ];
+    const interactionCell = getAdjacentCell();
+    const { x, y } = interactionCell;
 
-    let interacted = false;
-    const newOrder = [...currentOrder];
-    
-    newOrder.forEach((orderItem, index) => {
-      if (!orderItem.completed && adjacentCells.some(cell => cell.x === orderItem.location.x && cell.y === orderItem.location.y)) {
-        newOrder[index].completed = true;
-        interacted = true;
-        toast({
-          title: `Item ${mode === 'picking' ? 'Picked' : 'Stocked'}!`,
-          description: `${orderItem.quantity}x ${orderItem.productName}`,
-        });
-      }
-    });
+    // Logic for dropping an item
+    if (carriedItem) {
+        const targetCell = layout.find(cell => cell.x === x && cell.y === y);
+        // For now, let's assume we drop at the target location for the carried item.
+        // This will be expanded with processing zones later.
+        if(carriedItem.location.x === x && carriedItem.location.y === y) {
+             setCurrentOrder(prevOrder => {
+                const newOrder = prevOrder.map(o => o.productId === carriedItem.productId ? { ...o, status: 'completed' } : o);
+                if(newOrder.every(item => item.status === 'completed')) {
+                    onGameEnd({ time, moves, cost });
+                }
+                return newOrder;
+             });
+             setCarriedItem(null);
+             toast({ title: `Item Stocked!`, description: `${carriedItem.quantity}x ${carriedItem.productName}` });
+        } else {
+             // Logic for dropping at a processing bay would go here.
+             toast({ variant: "destructive", title: "Wrong location", description: "This is not the destination for the carried item."})
+        }
+        return;
+    }
 
-    if (interacted) {
-      setCurrentOrder(newOrder);
-      if(newOrder.every(item => item.completed)) {
-        onGameEnd({ time, moves, cost });
-      }
+    // Logic for picking up an item
+    const orderItemIndex = currentOrder.findIndex(orderItem =>
+      orderItem.location.x === x && orderItem.location.y === y && orderItem.status === 'pending'
+    );
+
+    if (orderItemIndex !== -1) {
+      const itemToPick = currentOrder[orderItemIndex];
+      setCarriedItem(itemToPick);
+      setCurrentOrder(prevOrder => prevOrder.map((o, index) => index === orderItemIndex ? { ...o, status: 'carrying' } : o));
+      toast({
+        title: `Item Picked!`,
+        description: `${itemToPick.quantity}x ${itemToPick.productName}`,
+      });
     }
   };
   
@@ -103,7 +128,7 @@ export default function SimulationActive({ layout, order, mode, initialPlayerPos
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleMove]);
+  }, [handleMove, handleInteraction]);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(prev => prev + 1), 1000);
@@ -125,6 +150,7 @@ export default function SimulationActive({ layout, order, mode, initialPlayerPos
                 playerPosition={playerPosition}
                 playerDirection={direction}
                 order={currentOrder}
+                carriedItem={carriedItem}
             />
         </div>
         <Card className="lg:hidden">

@@ -1,4 +1,4 @@
-import type { WarehouseLayout, InventoryItem, GameMode } from './types';
+import type { WarehouseLayout, InventoryItem, GameMode, OrderItemStatus } from './types';
 
 const PRODUCT_NAMES = [
   "Flux Capacitor", "Quantum Carburetor", "Hyperdrive Core", "Plasma Injector",
@@ -29,7 +29,7 @@ export interface OrderItem {
   productName: string;
   location: { x: number; y: number };
   quantity: number;
-  completed: boolean;
+  status: OrderItemStatus;
 }
 
 export function generateOrder(layoutWithInventory: WarehouseLayout, mode: GameMode, size: number = 5): OrderItem[] {
@@ -60,7 +60,7 @@ export function generateOrder(layoutWithInventory: WarehouseLayout, mode: GameMo
       productName: selectedItem.item.name,
       location: selectedItem.location,
       quantity,
-      completed: false,
+      status: 'pending',
     });
   }
 
