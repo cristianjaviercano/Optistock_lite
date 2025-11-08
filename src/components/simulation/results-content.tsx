@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/context/auth-context';
 import type { GameSession } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Zap, BrainCircuit, Route, Shuffle, Trophy } from 'lucide-react';
+import { Loader2, Route, Shuffle, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { calculateCost } from '@/lib/simulation';
-import { aStar } from '@/lib/pathfinding';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 interface OptimalStats {
   time: number;
@@ -17,17 +16,12 @@ interface OptimalStats {
   cost: number;
 }
 
-// This function will house the optimization logic in the future.
-// For now, it returns mock data.
 const calculateOptimalPath = async (session: GameSession): Promise<OptimalStats> => {
     console.log("Calculating optimal path for game:", session.id);
-    // Simulate processing delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // For now, we'll return a mock result that is better than the user's.
-    // In the future, this would run a real pathfinding algorithm (like A* or a VRP solver).
-    const mockMoves = Math.floor(session.moves * (Math.random() * 0.2 + 0.7)); // 70-90% of user moves
-    const mockTime = Math.floor(session.time * (Math.random() * 0.2 + 0.75)); // 75-95% of user time
+    const mockMoves = Math.floor(session.moves * (Math.random() * 0.2 + 0.7)); // 70-90%
+    const mockTime = Math.floor(session.time * (Math.random() * 0.2 + 0.75)); // 75-95%
     const mockCost = calculateCost(mockMoves, mockTime);
 
     return {
@@ -37,32 +31,26 @@ const calculateOptimalPath = async (session: GameSession): Promise<OptimalStats>
     };
 };
 
+interface ResultsPageContentProps {
+    history: GameSession[];
+    selectedGameId: string | null;
+    onSelectGame: (gameId: string) => void;
+}
 
-export default function ResultsPage({ params }: { params: { gameId: string } }) {
-  const gameId = params.gameId;
-  const { user } = useAuth();
+export default function ResultsPageContent({ history, selectedGameId, onSelectGame }: ResultsPageContentProps) {
   const [session, setSession] = useState<GameSession | null>(null);
   const [optimalStats, setOptimalStats] = useState<OptimalStats | null>(null);
-  const [loading, setLoading] = useState(true);
   const [comparisonLoading, setComparisonLoading] = useState(false);
 
   useEffect(() => {
-    if (user && gameId) {
-      const historyJson = localStorage.getItem(`optistock_history_${user.id}`);
-      if (historyJson) {
-        try {
-          const history: GameSession[] = JSON.parse(historyJson);
-          const foundSession = history.find(s => s.id === gameId);
-          if (foundSession) {
-            setSession(foundSession);
-          }
-        } catch (e) {
-            console.error("Failed to parse history or find session", e);
-        }
-      }
-      setLoading(false);
+    if (selectedGameId) {
+        const foundSession = history.find(s => s.id === selectedGameId);
+        setSession(foundSession || null);
+        setOptimalStats(null); // Reset comparison when game changes
+    } else {
+        setSession(null);
     }
-  }, [user, gameId]);
+  }, [selectedGameId, history]);
 
   const handleCompare = async () => {
     if (!session) return;
@@ -72,26 +60,50 @@ export default function ResultsPage({ params }: { params: { gameId: string } }) 
     setComparisonLoading(false);
   }
 
-  if (loading) {
-    return <div className="flex h-full min-h-[500px] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (history.length === 0) {
+     return (
+      <Card className="text-center">
+        <CardHeader>
+          <CardTitle>No hay resultados de simulación</CardTitle>
+          <CardDescription>Completa una simulación para ver tus resultados aquí.</CardDescription>
+        </CardHeader>
+      </Card>
+    );
   }
 
   if (!session) {
     return (
       <Card className="text-center">
         <CardHeader>
-          <CardTitle>Session Not Found</CardTitle>
-          <CardDescription>The requested simulation result could not be found.</CardDescription>
+          <CardTitle>Selecciona una simulación</CardTitle>
+          <CardDescription>Elige una simulación del menú para ver sus detalles.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button asChild><Link href="/dashboard">Back to Dashboard</Link></Button>
-        </CardContent>
       </Card>
     );
   }
-
+  
   return (
     <div className="grid gap-6">
+        <Card>
+            <CardHeader>
+                 <Label htmlFor="game-select">Seleccionar Simulación</Label>
+            </CardHeader>
+            <CardContent>
+                <Select value={selectedGameId || ''} onValueChange={onSelectGame}>
+                    <SelectTrigger id="game-select">
+                        <SelectValue placeholder="Elige una simulación para ver..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {history.map(s => (
+                            <SelectItem key={s.id} value={s.id}>
+                                {new Date(s.date).toLocaleString()} - Coste: ${s.cost.toFixed(2)}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </CardContent>
+        </Card>
+
       <Card>
         <CardHeader>
             <div className='flex justify-between items-start'>
@@ -150,7 +162,7 @@ export default function ResultsPage({ params }: { params: { gameId: string } }) 
                 <CardDescription>
                     Así se compara tu rendimiento con una solución optimizada para la misma tarea.
                 </CardDescription>
-            </CardHeader>
+            </Header>
             <CardContent>
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div className="p-4 bg-accent/10 rounded-lg">
@@ -169,11 +181,6 @@ export default function ResultsPage({ params }: { params: { gameId: string } }) 
             </CardContent>
         </Card>
       )}
-
-      <div className="flex gap-4">
-        <Button asChild size="lg"><Link href="/simulation">Correr Otra Simulación</Link></Button>
-        <Button asChild variant="outline" size="lg"><Link href="/dashboard">Ver Dashboard</Link></Button>
-      </div>
     </div>
   );
 }

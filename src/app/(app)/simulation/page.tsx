@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/auth-context';
-import type { GameMode, WarehouseLayout, NamedWarehouseLayout, PlayMode } from '@/lib/types';
+import type { GameMode, WarehouseLayout, NamedWarehouseLayout, PlayMode, GameSession } from '@/lib/types';
 import { generateInventory, generateOrder, findStartBay } from '@/lib/simulation';
 import SimulationSetup from '@/components/simulation/simulation-setup';
 import SimulationActive from '@/components/simulation/simulation-active';
@@ -10,20 +10,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
-import type { OrderItem } from '@/lib/simulation';
 import { useRouter } from 'next/navigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ResultsPageContent from '@/components/simulation/results-content';
+
 
 export default function SimulationPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [savedLayouts, setSavedLayouts] = useState<Record<string, NamedWarehouseLayout>>({});
-  const [selectedLayout, setSelectedLayout] = useState<WarehouseLayout | null>(null);
-  const [gameState, setGameState] = useState<'setup' | 'active' | 'finished'>('setup');
+  const [gameState, setGameState] = useState<'setup' | 'active'>('setup');
   const [gameMode, setGameMode] = useState<GameMode>('picking');
   const [playMode, setPlayMode] = useState<PlayMode>('free');
-  const [order, setOrder] = useState<OrderItem[]>([]);
+  const [order, setOrder] = useState<any[]>([]);
   const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 0 });
   const [loading, setLoading] = useState(true);
+  const [currentLayout, setCurrentLayout] = useState<WarehouseLayout | null>(null);
+
+  const [activeTab, setActiveTab] = useState('simulation');
+  const [gameHistory, setGameHistory] = useState<GameSession[]>([]);
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -37,16 +43,24 @@ export default function SimulationPage() {
         console.error("Failed to parse layouts from localStorage", e);
       }
       setSavedLayouts(initialLayouts);
+      
+      try {
+        const historyJson = localStorage.getItem(`optistock_history_${user.id}`);
+        if (historyJson) {
+            const parsedHistory: GameSession[] = JSON.parse(historyJson);
+            parsedHistory.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            setGameHistory(parsedHistory);
+            if(parsedHistory.length > 0) {
+              setSelectedGameId(parsedHistory[0].id);
+            }
+        }
+      } catch (e) {
+         console.error("Failed to parse game history from localStorage", e);
+      }
+
       setLoading(false);
     }
   }, [user]);
-
-  const generateNewOrder = useCallback(() => {
-    if (!selectedLayout) return;
-    const layoutWithInventory = generateInventory(selectedLayout);
-    const newOrder = generateOrder(layoutWithInventory, gameMode, 5);
-    setOrder(newOrder);
-  }, [selectedLayout, gameMode]);
 
   const handleStartGame = (mode: GameMode, layout: WarehouseLayout, playMode: PlayMode) => {
     const startPosition = findStartBay(layout);
@@ -56,7 +70,7 @@ export default function SimulationPage() {
     
     setGameMode(mode);
     setPlayMode(playMode);
-    setSelectedLayout(layout);
+    setCurrentLayout(layout);
     
     const layoutWithInventory = generateInventory(layout);
     const newOrder = generateOrder(layoutWithInventory, mode, 5);
@@ -66,24 +80,25 @@ export default function SimulationPage() {
   };
   
   const handleGameEnd = (finalStats: { time: number, moves: number, cost: number }) => {
-    if (!user || !selectedLayout) return;
-    const gameId = new Date().toISOString() + Math.random();
-    const newGameSession = {
-      id: gameId,
+    if (!user || !currentLayout) return;
+    
+    const newGameSession: GameSession = {
+      id: new Date().toISOString() + Math.random(),
       userId: user.id,
       date: new Date().toISOString(),
       mode: gameMode,
       playMode: playMode,
       ...finalStats,
-      layout: selectedLayout,
+      layout: currentLayout,
     };
-    const historyJson = localStorage.getItem(`optistock_history_${user.id}`);
-    const history = historyJson ? JSON.parse(historyJson) : [];
-    history.push(newGameSession);
-    localStorage.setItem(`optistock_history_${user.id}`, JSON.stringify(history));
+    
+    const updatedHistory = [newGameSession, ...gameHistory];
+    setGameHistory(updatedHistory);
+    localStorage.setItem(`optistock_history_${user.id}`, JSON.stringify(updatedHistory));
 
-    setGameState('finished');
-    router.push(`/results/${gameId}`);
+    setGameState('setup'); // Reset game state
+    setActiveTab('results'); // Switch to results tab
+    setSelectedGameId(newGameSession.id); // Select the new game
   };
 
 
@@ -109,21 +124,39 @@ export default function SimulationPage() {
     );
   }
 
-  if (gameState === 'active' && selectedLayout) {
-    return (
-        <SimulationActive
-          layout={selectedLayout}
-          order={order}
-          mode={gameMode}
-          playMode={playMode}
-          initialPlayerPosition={playerPosition}
-          onGameEnd={handleGameEnd}
-          onNewOrder={generateNewOrder}
-        />
-      )
-  }
-
   return (
-    <SimulationSetup savedLayouts={savedLayouts} onStart={handleStartGame} />
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="simulation">Simulación</TabsTrigger>
+        <TabsTrigger value="results">Resultados</TabsTrigger>
+      </TabsList>
+      <TabsContent value="simulation" className="mt-4">
+        {gameState === 'active' && currentLayout ? (
+          <SimulationActive
+            layout={currentLayout}
+            order={order}
+            mode={gameMode}
+            playMode={playMode}
+            initialPlayerPosition={playerPosition}
+            onGameEnd={handleGameEnd}
+            onNewOrder={() => {
+              if (!currentLayout) return;
+              const layoutWithInventory = generateInventory(currentLayout);
+              const newOrder = generateOrder(layoutWithInventory, gameMode, 5);
+              setOrder(newOrder);
+            }}
+          />
+        ) : (
+          <SimulationSetup savedLayouts={savedLayouts} onStart={handleStartGame} />
+        )}
+      </TabsContent>
+      <TabsContent value="results" className="mt-4">
+        <ResultsPageContent 
+            history={gameHistory}
+            selectedGameId={selectedGameId}
+            onSelectGame={setSelectedGameId}
+        />
+      </TabsContent>
+    </Tabs>
   );
 }
