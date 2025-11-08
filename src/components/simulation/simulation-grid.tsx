@@ -2,7 +2,7 @@
 
 import type { WarehouseLayout } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { User as UserIcon, Target, Factory, Server, ArrowRightToLine, ArrowLeftFromLine, Home } from "lucide-react";
+import { Forklift as ForkliftIcon, Package, Factory, Server, ArrowRightToLine, ArrowLeftFromLine, Home } from "lucide-react";
 import React from "react";
 import type { OrderItem } from '@/lib/simulation';
 
@@ -48,10 +48,10 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, order
             gridItems.push(
               <div key={`${x}-${y}`} className={cellClasses}>
                 {icon}
-                {isPlayerPosition && <UserIcon className="h-6 w-6 text-foreground z-10 absolute" />}
+                {isPlayerPosition && <ForkliftIcon className="h-6 w-6 text-foreground z-10 absolute" />}
                 {orderItem && (
                     <div className="absolute inset-0 flex items-center justify-center z-20 animate-pulse">
-                        <Target className="h-5 w-5 text-destructive" />
+                        <Package className="h-5 w-5 text-destructive" />
                     </div>
                 )}
               </div>
@@ -105,10 +105,10 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, order
                return (
                  <div key={`${x}-${y}`} className={cellClasses}>
                    {icon}
-                   {isPlayerPosition && <UserIcon className="h-6 w-6 text-foreground z-10 absolute" />}
+                   {isPlayerPosition && <ForkliftIcon className="h-6 w-6 text-foreground z-10 absolute" />}
                    {orderItem && (
                        <div className="absolute inset-0 flex items-center justify-center z-20 animate-pulse">
-                           <Target className="h-5 w-5 text-destructive" />
+                           <Package className="h-5 w-5 text-destructive" />
                        </div>
                    )}
                  </div>
