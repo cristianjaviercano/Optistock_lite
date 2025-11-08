@@ -2,6 +2,7 @@ export interface User {
   id: string;
   email: string;
   password?: string; // Should not be stored long-term, but needed for signup
+  role?: 'admin' | 'user';
 }
 
 export type WarehouseItemType = 'floor' | 'shelf' | 'bay';

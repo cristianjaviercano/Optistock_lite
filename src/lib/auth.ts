@@ -6,7 +6,18 @@ function getUsers(): User[] {
   if (typeof window === 'undefined') return [];
   try {
     const usersJson = localStorage.getItem('optistock_users');
-    return usersJson ? JSON.parse(usersJson) : [];
+    let users = usersJson ? JSON.parse(usersJson) : [];
+    // Add admin user if not present
+    if (!users.some((u: User) => u.email === 'admin@example.com')) {
+      users.push({
+        id: 'admin-user',
+        email: 'admin@example.com',
+        password: 'admim',
+        role: 'admin'
+      });
+      saveUsers(users);
+    }
+    return users;
   } catch (e) {
     console.error("Failed to parse users from localStorage", e);
     return [];
@@ -29,7 +40,8 @@ export function signup(email: string, password: string): { success: boolean; use
   const newUser: User = {
     id: new Date().toISOString() + Math.random(),
     email,
-    password // This is insecure, but fine for a simulation
+    password, // This is insecure, but fine for a simulation
+    role: 'user',
   };
 
   users.push(newUser);
