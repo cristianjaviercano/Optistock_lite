@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import LayoutManager from "@/components/design/layout-manager";
+import { defaultLayouts } from "@/lib/default-layouts";
 
 const GRID_SIZE = { width: 20, height: 12 };
 const TOTAL_SLOTS = 4;
@@ -35,14 +36,29 @@ export default function DesignPage() {
   useEffect(() => {
     if (user) {
       let initialLayouts: Record<string, NamedWarehouseLayout> = {};
+      let layoutsFound = false;
       try {
         const savedData = localStorage.getItem(`optistock_layouts_${user.id}`);
         if (savedData) {
           initialLayouts = JSON.parse(savedData);
+          if (Object.keys(initialLayouts).length > 0) {
+            layoutsFound = true;
+          }
         }
       } catch (e) {
         console.error("Failed to parse layouts from localStorage", e);
       }
+      
+      if (!layoutsFound) {
+        // No layouts found, so load defaults
+        initialLayouts = defaultLayouts;
+        localStorage.setItem(`optistock_layouts_${user.id}`, JSON.stringify(initialLayouts));
+        toast({
+          title: "Diseños de ejemplo cargados",
+          description: "Hemos cargado dos diseños de almacén para que puedas empezar.",
+        });
+      }
+
       setSavedLayouts(initialLayouts);
 
       // Load layout from active slot or create a new empty one
@@ -51,7 +67,7 @@ export default function DesignPage() {
 
       setLoading(false);
     }
-  }, [user]);
+  }, [user, toast]);
 
   const handleSaveLayout = (name: string) => {
     if (user && name) {

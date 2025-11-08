@@ -111,7 +111,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     }
   }, [playerPosition, direction, isMoveValid]);
   
-  const handleInteraction = () => {
+  const handleInteraction = useCallback(() => {
     const interactionCell = getAdjacentCell();
     if (!interactionCell) return;
     const { x, y } = interactionCell;
@@ -203,9 +203,9 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
             }
         }
     }
-  };
+  }, [getAdjacentCell, carriedItem, mode, playMode, currentOrder, toast]);
 
-  const handleDispatch = () => {
+  const handleDispatch = useCallback(() => {
     const itemsToDispatch = currentOrder.filter(o => o.status === 'ready-for-dispatch');
     if (itemsToDispatch.length === 0) {
         toast({ variant: "destructive", title: "Nada para despachar", description: "No hay paquetes en las bahías de salida."});
@@ -214,7 +214,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
 
     setCurrentOrder(prev => prev.map(o => o.status === 'ready-for-dispatch' ? { ...o, status: 'completed' } : o));
     toast({ title: "¡Despacho completo!", description: `${itemsToDispatch.length} paquete(s) han sido enviados.`});
-  }
+  }, [currentOrder, toast]);
 
   useEffect(() => {
     if (currentOrder.length > 0 && currentOrder.every(item => item.status === 'completed' && !carriedItem)) {
@@ -250,7 +250,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleMove, handleInteraction, mode]);
+  }, [handleMove, handleInteraction, handleDispatch, mode]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -291,9 +291,20 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
               />
           </div>
           <Card className="lg:hidden">
-              <CardContent className="p-4 flex gap-2">
-                  <Button onClick={handleInteraction} className="w-full">Interactuar</Button>
+              <CardContent className="p-4 flex flex-col gap-4">
+                  <div className="flex justify-center items-center gap-2">
+                       <Button variant="outline" size="icon" onClick={() => handleMove('up')}><ArrowUp/></Button>
+                  </div>
+                  <div className="flex justify-center items-center gap-2">
+                      <Button variant="outline" size="icon" onClick={() => handleMove('left')}><ArrowLeft/></Button>
+                       <Button onClick={handleInteraction} className="p-6 h-auto aspect-square bg-primary/20"><Gamepad className="w-6 h-6"/></Button>
+                      <Button variant="outline" size="icon" onClick={() => handleMove('right')}><ArrowRight/></Button>
+                  </div>
+                  <div className="flex justify-center items-center gap-2">
+                       <Button variant="outline" size="icon" onClick={() => handleMove('down')}><ArrowDown/></Button>
+                  </div>
                   {showDispatchButton && <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90"><Truck className="mr-2"/>Despacho</Button>}
+                  <p className="text-xs text-muted-foreground text-center">Usa los controles para moverte e interactuar.</p>
               </CardContent>
           </Card>
         </div>
