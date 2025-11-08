@@ -12,7 +12,7 @@ function getUsers(): User[] {
       users.push({
         id: 'admin-user',
         email: 'admin@example.com',
-        password: 'admim',
+        password: 'admin',
         role: 'admin'
       });
       saveUsers(users);
