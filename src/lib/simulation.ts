@@ -73,7 +73,11 @@ export function calculateCost(moves: number, time: number): number {
     return (moves * moveCost) + (time * timeCost);
 }
 
-export function findStartBay(layout: WarehouseLayout): { x: number; y: number } | null {
+export function findStartBay(layout: WarehouseLayout): { x: number; y: number } {
+    const forkliftZone = layout.find(item => item.type === 'forklift');
+    if (forkliftZone) {
+      return { x: forkliftZone.x, y: forkliftZone.y };
+    }
     const bay = layout.find(item => item.type === 'bay');
     if (bay) {
       return { x: bay.x, y: bay.y };

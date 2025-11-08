@@ -2,7 +2,7 @@
 
 import type { WarehouseLayout } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Server, Layers, User as UserIcon, Package, Target } from "lucide-react";
+import { Server, Layers, User as UserIcon, Package, Target, Factory, Truck } from "lucide-react";
 import React from "react";
 import type { OrderItem } from '@/lib/simulation';
 
@@ -28,11 +28,15 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, order
             item.type === 'floor' && "bg-background",
             item.type === 'shelf' && "bg-primary/20",
             item.type === 'bay' && "bg-accent/20",
+            item.type === 'processing' && "bg-chart-3/20",
+            item.type === 'forklift' && "bg-chart-4/20",
         );
         
         let icon = null;
         if(item.type === 'shelf') icon = <Server className="h-5 w-5 text-primary opacity-60" />;
         if(item.type === 'bay') icon = <Layers className="h-5 w-5 text-accent opacity-60" />;
+        if(item.type === 'processing') icon = <Factory className="h-5 w-5 text-chart-3 opacity-60" />;
+        if(item.type === 'forklift') icon = <Truck className="h-5 w-5 text-chart-4 opacity-60" />;
 
         gridCells.push(
           <div key={`${x}-${y}`} className={cellClasses}>
