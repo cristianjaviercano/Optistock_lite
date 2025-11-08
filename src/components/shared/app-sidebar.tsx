@@ -59,6 +59,16 @@ export default function AppSidebar({ isCollapsed, setCollapsed }: AppSidebarProp
             </Tooltip>
           ))}
         </nav>
+        
+        <div className={cn("px-4 pb-2 text-xs text-muted-foreground", isCollapsed && "hidden")}>
+            <div className="border-t pt-3 space-y-1">
+                <p className="font-semibold text-foreground">Semillero de investigacion. SILOGÉ</p>
+                <p>Universidad Pontificia Bolivariana Montería</p>
+                <p>Facultad de Ingenieria Industrial</p>
+                <p>@silogé_upb</p>
+            </div>
+        </div>
+
         <nav className="mt-auto flex flex-col gap-2 p-2 border-t">
            <Tooltip>
                 <TooltipTrigger asChild>
