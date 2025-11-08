@@ -34,34 +34,59 @@ export interface OrderItem {
 
 export function generateOrder(layoutWithInventory: WarehouseLayout, mode: GameMode, size: number = 5): OrderItem[] {
   const order: OrderItem[] = [];
-  const availableItems: { item: InventoryItem; location: { x: number; y: number } }[] = [];
+  const shelves: WarehouseItem[] = [];
+  const inBays: WarehouseItem[] = [];
 
   layoutWithInventory.forEach(warehouseItem => {
-    if (warehouseItem.type === 'shelf' && warehouseItem.inventory) {
-      warehouseItem.inventory.forEach(invItem => {
-        availableItems.push({ item: invItem, location: { x: warehouseItem.x, y: warehouseItem.y } });
-      });
+    if (warehouseItem.type === 'shelf' && warehouseItem.inventory && warehouseItem.inventory.length > 0) {
+      shelves.push(warehouseItem);
+    }
+    if (warehouseItem.type === 'bay-in') {
+        inBays.push(warehouseItem);
     }
   });
 
-  if (availableItems.length === 0) return [];
-  
-  const shuffledItems = availableItems.sort(() => 0.5 - Math.random());
-  const selectedItems = shuffledItems.slice(0, Math.min(size, shuffledItems.length));
 
-
-  for (const selectedItem of selectedItems) {
-    const quantity = mode === 'picking'
-      ? Math.min(selectedItem.item.quantity, Math.floor(Math.random() * 5) + 1) // Pick 1-5
-      : Math.floor(Math.random() * 10) + 1; // Stock 1-10
-
-    order.push({
-      productId: selectedItem.item.id,
-      productName: selectedItem.item.name,
-      location: selectedItem.location,
-      quantity,
-      status: 'pending',
+  if (mode === 'picking') {
+    const availableItems: { item: InventoryItem; location: { x: number; y: number } }[] = [];
+    shelves.forEach(shelf => {
+        shelf.inventory?.forEach(invItem => {
+            availableItems.push({ item: invItem, location: { x: shelf.x, y: shelf.y } });
+        })
     });
+    
+    if (availableItems.length === 0) return [];
+    
+    const shuffledItems = availableItems.sort(() => 0.5 - Math.random());
+    const selectedItems = shuffledItems.slice(0, Math.min(size, shuffledItems.length));
+  
+    for (const selectedItem of selectedItems) {
+      const quantity = Math.min(selectedItem.item.quantity, Math.floor(Math.random() * 5) + 1); // Pick 1-5
+      order.push({
+        productId: selectedItem.item.id,
+        productName: selectedItem.item.name,
+        location: selectedItem.location,
+        quantity,
+        status: 'pending',
+      });
+    }
+  } else { // stocking mode
+    if (shelves.length === 0 || inBays.length === 0) return [];
+    
+    const shuffledShelves = shelves.sort(() => 0.5 - Math.random());
+    const selectedShelves = shuffledShelves.slice(0, Math.min(size, shuffledShelves.length));
+
+    for (const shelf of selectedShelves) {
+        const bay = inBays[Math.floor(Math.random() * inBays.length)];
+        order.push({
+            productId: `new-item-${shelf.id}`,
+            productName: PRODUCT_NAMES[Math.floor(Math.random() * PRODUCT_NAMES.length)],
+            location: { x: shelf.x, y: shelf.y }, // Target location is the shelf
+            origin: { x: bay.x, y: bay.y }, // Origin is the in-bay
+            quantity: Math.floor(Math.random() * 10) + 1, // Stock 1-10
+            status: 'pending',
+        });
+    }
   }
 
   return order;

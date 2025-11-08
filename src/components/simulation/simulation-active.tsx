@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import type { WarehouseLayout, GameMode, WarehouseItem } from '@/lib/types';
+import type { WarehouseLayout, GameMode, WarehouseItem, OrderItemStatus } from '@/lib/types';
 import type { OrderItem } from '@/lib/simulation';
 import { calculateCost, findStartBay } from '@/lib/simulation';
 import SimulationGrid from './simulation-grid';
@@ -37,23 +37,35 @@ export default function SimulationActive({ layout, order, mode, initialPlayerPos
       height: Math.max(...layout.map(i => i.y)) + 1,
   };
   
-  const getAdjacentCell = useCallback(() => {
+  const getAdjacentCell = useCallback((): WarehouseItem | undefined => {
     const { x, y } = playerPosition;
+    let targetCoords: {x: number, y: number};
     switch (direction) {
-        case 'up': return { x, y: y - 1 };
-        case 'down': return { x, y: y + 1 };
-        case 'left': return { x: x - 1, y };
-        case 'right': return { x: x + 1, y };
+        case 'up': targetCoords = { x, y: y - 1 }; break;
+        case 'down': targetCoords = { x, y: y + 1 }; break;
+        case 'left': targetCoords = { x: x - 1, y }; break;
+        case 'right': targetCoords = { x: x + 1, y }; break;
     }
-  }, [playerPosition, direction]);
+    return layout.find(item => item.x === targetCoords.x && item.y === targetCoords.y);
+  }, [playerPosition, direction, layout]);
 
   const isMoveValid = useCallback((x: number, y: number) => {
     if (x < 0 || x >= gridSize.width || y < 0 || y >= gridSize.height) return false;
     const cell = layout.find(item => item.x === x && item.y === y);
-    // Forklift can't move on shelves or cells with pending order items.
-    const hasPendingOrder = currentOrder.some(o => o.location.x === x && o.location.y === y && o.status === 'pending');
     
-    return cell?.type !== 'shelf' && !hasPendingOrder;
+    // Cannot move onto shelves.
+    if(cell?.type === 'shelf') return false;
+
+    // Cannot move onto a processing station that is busy
+    const isProcessingCell = cell?.type === 'processing';
+    const isProcessingItemThere = currentOrder.some(o => o.location.x === x && o.location.y === y && o.status === 'processing');
+    if (isProcessingCell && isProcessingItemThere) return false;
+
+    // Cannot move onto a cell with a pending item
+    const hasPendingOrder = currentOrder.some(o => o.location.x === x && o.location.y === y && o.status === 'pending');
+    if (hasPendingOrder) return false;
+
+    return true;
   }, [layout, gridSize, currentOrder]);
 
   const handleMove = useCallback((dx: number, dy: number) => {
@@ -73,46 +85,85 @@ export default function SimulationActive({ layout, order, mode, initialPlayerPos
   
   const handleInteraction = () => {
     const interactionCell = getAdjacentCell();
+    if (!interactionCell) return;
     const { x, y } = interactionCell;
 
-    // Logic for dropping an item
-    if (carriedItem) {
-        const targetCell = layout.find(cell => cell.x === x && cell.y === y);
-        // For now, let's assume we drop at the target location for the carried item.
-        // This will be expanded with processing zones later.
-        if(carriedItem.location.x === x && carriedItem.location.y === y) {
-             setCurrentOrder(prevOrder => {
-                const newOrder = prevOrder.map(o => o.productId === carriedItem.productId ? { ...o, status: 'completed' } : o);
-                if(newOrder.every(item => item.status === 'completed')) {
-                    onGameEnd({ time, moves, cost });
+    // === PICKING MODE LOGIC ===
+    if (mode === 'picking') {
+        // --- Dropping an item ---
+        if (carriedItem) {
+            // Drop at processing station
+            if (interactionCell.type === 'processing' && carriedItem.status === 'carrying') {
+                toast({ title: "Item in processing", description: `Processing ${carriedItem.productName}.`});
+                
+                setCurrentOrder(prev => prev.map(o => o.productId === carriedItem.productId ? {...o, status: 'processing', location: {x, y} } : o));
+                setCarriedItem(null);
+
+                // Simulate processing time
+                const processingTime = (Math.floor(Math.random() * 4) + 2) * 1000; // 2-5 seconds
+                setTimeout(() => {
+                    setCurrentOrder(prev => prev.map(o => o.productId === carriedItem.productId ? {...o, status: 'completed' } : o));
+                    toast({ title: "Processing complete!", description: `${carriedItem.productName} is ready for dispatch.`});
+                }, processingTime);
+
+            } // Drop at dispatch bay
+            else if (interactionCell.type === 'bay-out' && carriedItem.status === 'completed') {
+                toast({ title: "Item Dispatched!", description: `${carriedItem.productName} has been dispatched.`});
+                setCurrentOrder(prev => prev.map(o => o.productId === carriedItem.productId ? {...o, status: 'completed' } : o));
+                setCarriedItem(null);
+            } else {
+                toast({ variant: "destructive", title: "Wrong location", description: "This is not the correct drop-off point."})
+            }
+        } 
+        // --- Picking up an item ---
+        else {
+            const itemToPick = currentOrder.find(o => o.location.x === x && o.location.y === y && (o.status === 'pending' || o.status === 'completed'));
+            if(itemToPick) {
+                if (itemToPick.status === 'pending' && interactionCell.type === 'shelf') { // Pick from shelf
+                    setCarriedItem(itemToPick);
+                    setCurrentOrder(prev => prev.map(o => o.productId === itemToPick.productId ? {...o, status: 'carrying'}: o));
+                    toast({ title: `Item Picked!`, description: `Carry ${itemToPick.productName} to a processing station.` });
+                } else if (itemToPick.status === 'completed' && interactionCell.type === 'processing') { // Pick from processing
+                    setCarriedItem(itemToPick);
+                    setCurrentOrder(prev => prev.map(o => o.productId === itemToPick.productId ? {...o, status: 'carrying'}: o));
+                    toast({ title: `Item Ready!`, description: `Take ${itemToPick.productName} to a dispatch bay.` });
                 }
-                return newOrder;
-             });
-             setCarriedItem(null);
-             toast({ title: `Item Stocked!`, description: `${carriedItem.quantity}x ${carriedItem.productName}` });
-        } else {
-             // Logic for dropping at a processing bay would go here.
-             toast({ variant: "destructive", title: "Wrong location", description: "This is not the destination for the carried item."})
+            }
         }
-        return;
     }
 
-    // Logic for picking up an item
-    const orderItemIndex = currentOrder.findIndex(orderItem =>
-      orderItem.location.x === x && orderItem.location.y === y && orderItem.status === 'pending'
-    );
-
-    if (orderItemIndex !== -1) {
-      const itemToPick = currentOrder[orderItemIndex];
-      setCarriedItem(itemToPick);
-      setCurrentOrder(prevOrder => prevOrder.map((o, index) => index === orderItemIndex ? { ...o, status: 'carrying' } : o));
-      toast({
-        title: `Item Picked!`,
-        description: `${itemToPick.quantity}x ${itemToPick.productName}`,
-      });
+    // === STOCKING MODE LOGIC ===
+    if (mode === 'stocking') {
+         // --- Dropping an item ---
+        if (carriedItem) {
+            // Drop at the target shelf
+            if (interactionCell.type === 'shelf' && carriedItem.location.x === x && carriedItem.location.y === y) {
+                toast({ title: `Item Stocked!`, description: `${carriedItem.quantity}x ${carriedItem.productName}` });
+                setCurrentOrder(prev => prev.map(o => o.productId === carriedItem.productId ? { ...o, status: 'completed' } : o));
+                setCarriedItem(null);
+            } else {
+                toast({ variant: "destructive", title: "Wrong shelf", description: "This is not the correct location for this item."})
+            }
+        }
+        // --- Picking up an item ---
+        else {
+            const itemToPick = currentOrder.find(o => o.location.x === x && o.location.y === y && o.status === 'pending');
+            if (itemToPick && interactionCell.type === 'bay-in') {
+                setCarriedItem(itemToPick);
+                setCurrentOrder(prev => prev.map(o => o.productId === itemToPick.productId ? {...o, status: 'carrying'}: o));
+                toast({ title: `Item Picked!`, description: `Carry ${itemToPicks.productName} to its shelf.` });
+            }
+        }
     }
   };
   
+  useEffect(() => {
+    // Check for game end
+    if (currentOrder.length > 0 && currentOrder.every(item => item.status === 'completed')) {
+      onGameEnd({ time, moves, cost });
+    }
+  }, [currentOrder, onGameEnd, time, moves, cost]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       e.preventDefault();

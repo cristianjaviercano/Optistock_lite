@@ -47,6 +47,7 @@ export interface OrderItem {
   productId: string;
   productName: string;
   location: { x: number; y: number };
+  origin?: { x: number, y: number }; // For stocking mode
   quantity: number;
   status: OrderItemStatus;
 }

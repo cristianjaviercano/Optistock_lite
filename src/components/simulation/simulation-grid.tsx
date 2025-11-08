@@ -2,7 +2,7 @@
 
 import type { WarehouseLayout } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Forklift as ForkliftIcon, Package, Package2 } from "lucide-react";
+import { Forklift as ForkliftIcon, Package, Package2, PackageCheck, PackageOpen, PackageSearch } from "lucide-react";
 import React from "react";
 import type { OrderItem } from '@/lib/simulation';
 
@@ -44,6 +44,14 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
     }
   }
 
+  const getOrderItemIcon = (item: OrderItem) => {
+    switch (item.status) {
+      case 'pending': return <Package className="h-5 w-5 text-destructive" />;
+      case 'processing': return <PackageSearch className="h-5 w-5 text-blue-500 animate-pulse" />;
+      case 'completed': return <PackageCheck className="h-5 w-5 text-green-500" />;
+      default: return null;
+    }
+  }
 
   return (
     <div
@@ -68,7 +76,7 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
             {Array.from({ length: gridSize.width }).map((_, x) => {
                const item = layout.find(i => i.x === x && i.y === y) || { id: `${x}-${y}`, type: 'floor', x, y };
                const isPlayerPosition = playerPosition.x === x && playerPosition.y === y;
-               const orderItem = order.find(o => o.status === 'pending' && o.location.x === x && o.location.y === y);
+               const orderItemOnCell = order.find(o => o.location.x === x && o.location.y === y && o.status !== 'carrying');
        
                const cellClasses = cn(
                    "aspect-square border flex items-center justify-center transition-colors relative bg-background"
@@ -76,11 +84,11 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
                
                let icon = null;
                 const IconComponent = {
-                    shelf: <div className="w-full h-full bg-primary/20"></div>,
-                    'bay-in': <div className="w-full h-full bg-accent/20"></div>,
-                    'bay-out': <div className="w-full h-full bg-accent/20"></div>,
-                    processing: <div className="w-full h-full bg-chart-3/20"></div>,
-                    forklift: <div className="w-full h-full bg-chart-4/20"></div>,
+                    shelf: <div className="w-full h-full bg-primary/10"></div>,
+                    'bay-in': <div className="w-full h-full bg-accent/10"></div>,
+                    'bay-out': <div className="w-full h-full bg-accent/10"></div>,
+                    processing: <div className="w-full h-full bg-chart-3/10"></div>,
+                    forklift: <div className="w-full h-full bg-chart-4/10"></div>,
                     floor: null,
                 }[item.type];
        
@@ -95,9 +103,9 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
                         )}
                     </div>
                    )}
-                   {orderItem && (
+                   {orderItemOnCell && (
                        <div className="absolute inset-0 flex items-center justify-center z-5">
-                           <Package className="h-5 w-5 text-destructive" />
+                           {getOrderItemIcon(orderItemOnCell)}
                        </div>
                    )}
                  </div>
