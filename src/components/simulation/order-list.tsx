@@ -36,7 +36,7 @@ export default function OrderList({ order, mode }: OrderListProps) {
                    <div className={cn("flex-grow", item.completed && "line-through text-muted-foreground")}>
                        <p className="font-medium">{item.productName}</p>
                        <p className="text-sm">Quantity: {item.quantity}</p>
-                       <p className="text-xs text-muted-foreground">Location: Aisle {item.location.x + 1}, Row {item.location.y + 1}</p>
+                       <p className="text-xs text-muted-foreground">Location: {String.fromCharCode(65 + item.location.x)}{item.location.y + 1}</p>
                    </div>
                 </div>
                 {index < order.length - 1 && <Separator className="my-4"/>}

@@ -42,6 +42,12 @@ function WarehouseCell({ item }: { item: WarehouseItem }) {
   );
 }
 
+const GridHeaderCell = ({ children }: { children: React.ReactNode }) => (
+    <div className="flex aspect-square items-center justify-center text-xs font-bold text-muted-foreground">
+        {children}
+    </div>
+)
+
 export default function WarehouseGrid({ layout, gridSize, onCellInteraction }: WarehouseGridProps) {
   const [isDragging, setIsDragging] = React.useState(false);
 
@@ -49,7 +55,11 @@ export default function WarehouseGrid({ layout, gridSize, onCellInteraction }: W
     onCellInteraction(x, y);
   };
 
-  const handleMouseDown = () => setIsDragging(true);
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // prevent text selection while dragging
+    e.preventDefault();
+    setIsDragging(true);
+  }
   const handleMouseUp = () => setIsDragging(false);
   
   const handleCellEnter = (x: number, y: number) => {
@@ -58,7 +68,7 @@ export default function WarehouseGrid({ layout, gridSize, onCellInteraction }: W
     }
   };
 
-  const cells = React.useMemo(() => {
+  const renderGrid = () => {
     const cellMap = new Map<string, WarehouseItem>();
     layout.forEach(item => cellMap.set(`${item.x}-${item.y}`, item));
 
@@ -78,23 +88,42 @@ export default function WarehouseGrid({ layout, gridSize, onCellInteraction }: W
       }
     }
     return gridCells;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layout, gridSize.height, gridSize.width, isDragging]);
-
+  };
+  
   return (
     <div 
+      className="select-none"
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <div
-        className="grid select-none"
-        style={{
-          gridTemplateColumns: `repeat(${gridSize.width}, minmax(0, 1fr))`,
-          minWidth: `${gridSize.width * 2.5}rem`,
-        }}
-      >
-        {cells}
+      <div className="grid" style={{ gridTemplateColumns: `auto repeat(${gridSize.width}, minmax(0, 1fr))` }}>
+        {/* Corner */}
+        <GridHeaderCell />
+        
+        {/* Column Headers */}
+        {Array.from({ length: gridSize.width }).map((_, i) => (
+          <GridHeaderCell key={`col-header-${i}`}>{String.fromCharCode(65 + i)}</GridHeaderCell>
+        ))}
+
+        {/* Row Headers and Grid */}
+        {Array.from({ length: gridSize.height }).map((_, y) => (
+          <React.Fragment key={`row-${y}`}>
+            <GridHeaderCell>{y + 1}</GridHeaderCell>
+            {Array.from({ length: gridSize.width }).map((_, x) => {
+               const item = layout.find(i => i.x === x && i.y === y) || { id: `${x}-${y}`, type: 'floor', x, y };
+               return (
+                <div 
+                  key={`${x}-${y}`} 
+                  onMouseDown={(e) => { e.stopPropagation(); handleInteraction(x,y); }}
+                  onMouseEnter={() => handleCellEnter(x, y)}
+                >
+                  <WarehouseCell item={item} />
+                </div>
+               )
+            })}
+          </React.Fragment>
+        ))}
       </div>
     </div>
   );
