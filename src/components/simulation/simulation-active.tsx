@@ -36,7 +36,7 @@ export default function SimulationActive({ layout, order, mode, initialPlayerPos
   const isMoveValid = useCallback((x: number, y: number) => {
     if (x < 0 || x >= gridSize.width || y < 0 || y >= gridSize.height) return false;
     const cell = layout.find(item => item.x === x && item.y === y);
-    return cell?.type === 'floor' || cell?.type === 'bay' || cell?.type === 'processing' || cell?.type === 'forklift';
+    return cell?.type === 'floor' || cell?.type === 'bay-in' || cell?.type === 'bay-out' || cell?.type === 'processing' || cell?.type === 'forklift';
   }, [layout, gridSize]);
 
   const handleMove = useCallback((dx: number, dy: number) => {

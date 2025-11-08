@@ -5,7 +5,7 @@ export interface User {
   role?: 'admin' | 'user';
 }
 
-export type WarehouseItemType = 'floor' | 'shelf' | 'bay' | 'processing' | 'forklift';
+export type WarehouseItemType = 'floor' | 'shelf' | 'bay-in' | 'bay-out' | 'processing' | 'forklift';
 
 export interface WarehouseItem {
   id: string;

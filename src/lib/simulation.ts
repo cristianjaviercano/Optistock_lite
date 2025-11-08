@@ -78,9 +78,13 @@ export function findStartBay(layout: WarehouseLayout): { x: number; y: number } 
     if (forkliftZone) {
       return { x: forkliftZone.x, y: forkliftZone.y };
     }
-    const bay = layout.find(item => item.type === 'bay');
-    if (bay) {
-      return { x: bay.x, y: bay.y };
+    const bayIn = layout.find(item => item.type === 'bay-in');
+    if (bayIn) {
+      return { x: bayIn.x, y: bayIn.y };
+    }
+    const bayOut = layout.find(item => item.type === 'bay-out');
+    if (bayOut) {
+      return { x: bayOut.x, y: bayOut.y };
     }
     // Fallback to the first floor tile if no bay exists
     const floor = layout.find(item => item.type === 'floor');
