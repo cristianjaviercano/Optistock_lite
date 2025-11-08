@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/auth-context';
-import type { GameMode, WarehouseLayout } from '@/lib/types';
+import type { GameMode, WarehouseLayout, NamedWarehouseLayout } from '@/lib/types';
 import { generateInventory, generateOrder, findStartBay } from '@/lib/simulation';
 import SimulationSetup from '@/components/simulation/simulation-setup';
 import SimulationActive from '@/components/simulation/simulation-active';
@@ -25,17 +25,25 @@ export default function SimulationPage() {
 
   useEffect(() => {
     if (user) {
-      const savedLayout = localStorage.getItem(`optistock_layout_${user.id}`);
-      if (savedLayout) {
+      // For simulation, we'll try to load the layout from the first available slot.
+      // A more complex implementation could let the user choose which layout to simulate.
+      const savedLayoutsJson = localStorage.getItem(`optistock_layouts_${user.id}`);
+      if (savedLayoutsJson) {
         try {
-            const parsedLayout = JSON.parse(savedLayout);
-            setLayout(parsedLayout);
-            const startPosition = findStartBay(parsedLayout);
-            if (startPosition) {
-            setPlayerPosition(startPosition);
+            const savedLayouts: Record<string, NamedWarehouseLayout> = JSON.parse(savedLayoutsJson);
+            // Find the first available layout to use for the simulation
+            const firstSlotKey = Object.keys(savedLayouts).sort()[0];
+            const layoutToSimulate = firstSlotKey ? savedLayouts[firstSlotKey].layout : null;
+
+            if (layoutToSimulate) {
+              setLayout(layoutToSimulate);
+              const startPosition = findStartBay(layoutToSimulate);
+              if (startPosition) {
+                setPlayerPosition(startPosition);
+              }
             }
         } catch(e) {
-            console.error("Failed to parse layout from localStorage", e);
+            console.error("Failed to parse layouts from localStorage", e);
         }
       }
       setLoading(false);
@@ -80,12 +88,12 @@ export default function SimulationPage() {
     return (
       <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline">No Warehouse Layout Found</CardTitle>
-          <CardDescription>You need to design a warehouse before you can run a simulation.</CardDescription>
+          <CardTitle className="text-2xl font-headline">No se encontró ningún diseño de almacén guardado</CardTitle>
+          <CardDescription>Necesitas diseñar y guardar un almacén antes de poder ejecutar una simulación.</CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild size="lg">
-            <Link href="/design">Go to Designer</Link>
+            <Link href="/design">Ir al Diseñador</Link>
           </Button>
         </CardContent>
       </Card>

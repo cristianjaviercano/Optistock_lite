@@ -23,6 +23,11 @@ export interface InventoryItem {
 
 export type WarehouseLayout = WarehouseItem[];
 
+export interface NamedWarehouseLayout {
+  name: string;
+  layout: WarehouseLayout;
+}
+
 export type GameMode = 'picking' | 'stocking';
 
 export interface GameSession {

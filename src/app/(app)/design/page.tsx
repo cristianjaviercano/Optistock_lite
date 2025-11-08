@@ -3,55 +3,100 @@
 import WarehouseGrid from "@/components/design/warehouse-grid";
 import DesignerToolbar from "@/components/design/designer-toolbar";
 import { useState, useEffect } from "react";
-import type { WarehouseItemType, WarehouseLayout } from "@/lib/types";
+import type { WarehouseItemType, WarehouseLayout, NamedWarehouseLayout } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import LayoutManager from "@/components/design/layout-manager";
 
 const GRID_SIZE = { width: 20, height: 12 };
+const TOTAL_SLOTS = 4;
+
+const createEmptyLayout = (): WarehouseLayout => {
+  const layout: WarehouseLayout = [];
+  for (let y = 0; y < GRID_SIZE.height; y++) {
+    for (let x = 0; x < GRID_SIZE.width; x++) {
+      layout.push({ id: `${x}-${y}`, type: 'floor', x, y });
+    }
+  }
+  return layout;
+}
 
 export default function DesignPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedTool, setSelectedTool] = useState<WarehouseItemType | 'eraser'>('floor');
   const [layout, setLayout] = useState<WarehouseLayout>([]);
+  const [savedLayouts, setSavedLayouts] = useState<Record<string, NamedWarehouseLayout>>({});
+  const [activeSlot, setActiveSlot] = useState<string>('1');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      let initialLayout: WarehouseLayout = [];
+      let initialLayouts: Record<string, NamedWarehouseLayout> = {};
       try {
-        const savedLayout = localStorage.getItem(`optistock_layout_${user.id}`);
-        if (savedLayout) {
-          initialLayout = JSON.parse(savedLayout);
+        const savedData = localStorage.getItem(`optistock_layouts_${user.id}`);
+        if (savedData) {
+          initialLayouts = JSON.parse(savedData);
         }
       } catch (e) {
-        console.error("Failed to parse layout from localStorage", e);
+        console.error("Failed to parse layouts from localStorage", e);
       }
+      setSavedLayouts(initialLayouts);
 
-      if (initialLayout.length === 0) {
-        // Initialize with an empty floor layout if nothing is saved or parsing fails
-        for (let y = 0; y < GRID_SIZE.height; y++) {
-          for (let x = 0; x < GRID_SIZE.width; x++) {
-            initialLayout.push({ id: `${x}-${y}`, type: 'floor', x, y });
-          }
-        }
-      }
-      setLayout(initialLayout);
+      // Load layout from active slot or create a new empty one
+      const activeLayoutData = initialLayouts[activeSlot];
+      setLayout(activeLayoutData ? activeLayoutData.layout : createEmptyLayout());
+
       setLoading(false);
     }
   }, [user]);
 
-  const handleSaveLayout = () => {
-    if (user) {
-      localStorage.setItem(`optistock_layout_${user.id}`, JSON.stringify(layout));
+  const handleSaveLayout = (name: string) => {
+    if (user && name) {
+      const newSavedLayouts = {
+        ...savedLayouts,
+        [activeSlot]: { name, layout }
+      };
+      setSavedLayouts(newSavedLayouts);
+      localStorage.setItem(`optistock_layouts_${user.id}`, JSON.stringify(newSavedLayouts));
       toast({
-        title: "Layout Saved",
-        description: "Your warehouse design has been saved successfully.",
+        title: "Diseño Guardado",
+        description: `El diseño "${name}" se ha guardado en la ranura ${activeSlot}.`,
       });
     }
   };
+
+  const handleLoadLayout = (slot: string) => {
+    setActiveSlot(slot);
+    const layoutToLoad = savedLayouts[slot];
+    setLayout(layoutToLoad ? layoutToLoad.layout : createEmptyLayout());
+    toast({
+        title: "Diseño Cargado",
+        description: layoutToLoad ? `Cargando "${layoutToLoad.name}" desde la ranura ${slot}.` : `Ranura ${slot} vacía. Iniciando un nuevo diseño.`,
+    });
+  }
+
+  const handleDeleteLayout = (slot: string) => {
+    if (window.confirm(`¿Estás seguro que quieres borrar el diseño de la ranura ${slot}?`)) {
+        const newSavedLayouts = { ...savedLayouts };
+        delete newSavedLayouts[slot];
+        setSavedLayouts(newSavedLayouts);
+        localStorage.setItem(`optistock_layouts_${user.id}`, JSON.stringify(newSavedLayouts));
+        
+        // If deleting the active slot, clear the grid
+        if (slot === activeSlot) {
+            setLayout(createEmptyLayout());
+        }
+
+        toast({
+            variant: "destructive",
+            title: "Diseño Borrado",
+            description: `El diseño de la ranura ${slot} ha sido borrado.`,
+        });
+    }
+  }
   
   const handleCellInteraction = (x: number, y: number) => {
     setLayout(prevLayout => {
@@ -65,6 +110,27 @@ export default function DesignPage() {
     });
   };
 
+  useEffect(() => {
+    // This is a temporary measure for migration. It saves the old single layout to slot 1 if it exists.
+    if (user && !loading) {
+      const oldLayoutData = localStorage.getItem(`optistock_layout_${user.id}`);
+      if (oldLayoutData) {
+        const layouts = JSON.parse(localStorage.getItem(`optistock_layouts_${user.id}`) || '{}');
+        if (!layouts['1']) {
+          const oldLayout = JSON.parse(oldLayoutData);
+          const newLayouts = { ...layouts, '1': { name: 'Mi primer diseño', layout: oldLayout } };
+          localStorage.setItem(`optistock_layouts_${user.id}`, JSON.stringify(newLayouts));
+          setSavedLayouts(newLayouts);
+          localStorage.removeItem(`optistock_layout_${user.id}`);
+          console.log('Old layout migrated to slot 1');
+        } else {
+            localStorage.removeItem(`optistock_layout_${user.id}`);
+        }
+      }
+    }
+  }, [user, loading]);
+
+
   if (loading) {
     return <div className="flex h-full min-h-[500px] w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -73,14 +139,21 @@ export default function DesignPage() {
       <div className="flex flex-col gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Warehouse Designer</CardTitle>
-            <CardDescription>Click a tool then click or drag on the grid to place or remove items. Don't forget to save your layout.</CardDescription>
+            <CardTitle className="font-headline">Diseñador de Almacenes</CardTitle>
+            <CardDescription>Usa las herramientas para crear tu diseño. Guarda y gestiona hasta 4 diseños diferentes usando las ranuras de guardado.</CardDescription>
           </CardHeader>
           <CardContent>
+            <LayoutManager 
+              totalSlots={TOTAL_SLOTS}
+              savedLayouts={savedLayouts}
+              activeSlot={activeSlot}
+              onLoad={handleLoadLayout}
+              onSave={handleSaveLayout}
+              onDelete={handleDeleteLayout}
+            />
             <DesignerToolbar
               selectedTool={selectedTool}
               setSelectedTool={setSelectedTool}
-              onSave={handleSaveLayout}
             />
           </CardContent>
         </Card>

@@ -1,28 +1,26 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { WarehouseItemType } from "@/lib/types";
-import { Eraser, Save, Server, Factory, Truck, ArrowRightToLine, ArrowLeftFromLine } from "lucide-react";
+import { Eraser, Server, Factory, Truck, ArrowRightToLine, ArrowLeftFromLine } from "lucide-react";
 
 interface DesignerToolbarProps {
   selectedTool: WarehouseItemType | 'eraser';
   setSelectedTool: (tool: WarehouseItemType | 'eraser') => void;
-  onSave: () => void;
 }
 
 const tools = [
-  { value: 'shelf', label: 'Shelf', icon: Server },
+  { value: 'shelf', label: 'Estante', icon: Server },
   { value: 'bay-in', label: 'Ingreso', icon: ArrowRightToLine },
   { value: 'bay-out', label: 'Despacho', icon: ArrowLeftFromLine },
-  { value: 'processing', label: 'Processing Zone', icon: Factory },
-  { value: 'forklift', label: 'Forklift Zone', icon: Truck },
-  { value: 'eraser', label: 'Eraser', icon: Eraser },
+  { value: 'processing', label: 'Procesamiento', icon: Factory },
+  { value: 'forklift', label: 'Montacargas', icon: Truck },
+  { value: 'eraser', label: 'Borrador', icon: Eraser },
 ]
 
-export default function DesignerToolbar({ selectedTool, setSelectedTool, onSave }: DesignerToolbarProps) {
+export default function DesignerToolbar({ selectedTool, setSelectedTool }: DesignerToolbarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-4">
+    <div className="flex flex-wrap items-center gap-4 pt-4">
       <ToggleGroup
         type="single"
         variant="outline"
@@ -30,7 +28,7 @@ export default function DesignerToolbar({ selectedTool, setSelectedTool, onSave 
         onValueChange={(value) => {
           if (value) setSelectedTool(value as WarehouseItemType | 'eraser');
         }}
-        aria-label="Warehouse design tools"
+        aria-label="Herramientas de diseño de almacén"
       >
         {tools.map(tool => (
             <ToggleGroupItem key={tool.value} value={tool.value} aria-label={tool.label} className="flex gap-2">
@@ -39,10 +37,6 @@ export default function DesignerToolbar({ selectedTool, setSelectedTool, onSave 
             </ToggleGroupItem>
         ))}
       </ToggleGroup>
-      <Button onClick={onSave} className="ml-auto">
-        <Save className="h-4 w-4 mr-2" />
-        Save Layout
-      </Button>
     </div>
   );
 }
