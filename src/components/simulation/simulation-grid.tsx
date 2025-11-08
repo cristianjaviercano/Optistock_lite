@@ -58,8 +58,8 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
     switch (direction) {
         case 'up': return 'absolute -translate-y-full top-1/2 left-1/2 -translate-x-1/2';
         case 'down': return 'absolute translate-y-full bottom-1/2 left-1/2 -translate-x-1/2';
-        case 'left': return 'absolute translate-x-full right-1/2 top-1/2 -translate-y-1/2'; // Flipped
-        case 'right': return 'absolute translate-x-full right-1/2 top-1/2 -translate-y-1/2';
+        case 'left': return 'absolute -translate-x-full left-[25%] top-1/2 -translate-y-1/2'; // Flipped
+        case 'right': return 'absolute translate-x-full right-[25%] top-1/2 -translate-y-1/2';
     }
   }
 
@@ -118,7 +118,7 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
                    {IconComponent}
                    {isPlayerPosition && (
                     <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <ForkliftSvg className={cn("h-full w-full text-foreground transition-transform", getRotationClass(playerDirection))} />
+                        <ForkliftSvg className={cn("h-full w-full text-foreground transition-transform", getRotationClass(playerDirection), "scale-[0.8]")} />
                         {carriedItem && (
                              <Package2 className={cn("h-4 w-4 text-destructive z-20", getForkliftAttachmentClass(playerDirection))} />
                         )}
@@ -137,5 +137,3 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
     </div>
   );
 }
-
-    

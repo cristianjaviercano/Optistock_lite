@@ -74,13 +74,10 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     return true;
   }, [layout, gridSize, currentOrder]);
 
-  const handleSetDirection = (newDirection: Direction) => {
-    setDirection(newDirection);
-  };
-  
-  const handleMoveForward = useCallback(() => {
+  const handleMove = useCallback((moveDirection: Direction) => {
+    setDirection(moveDirection);
     let dx = 0, dy = 0;
-    switch(direction) {
+    switch(moveDirection) {
       case 'up': dy = -1; break;
       case 'down': dy = 1; break;
       case 'left': dx = -1; break;
@@ -94,7 +91,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
       setPlayerPosition({ x: newX, y: newY });
       setMoves(prev => prev + 1);
     }
-  }, [playerPosition, direction, isMoveValid]);
+  }, [playerPosition, isMoveValid]);
   
   const handleInteraction = () => {
     const interactionCell = getAdjacentCell();
@@ -212,21 +209,22 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     const handleKeyDown = (e: KeyboardEvent) => {
       e.preventDefault();
       switch (e.key) {
-        case 'ArrowUp': handleSetDirection('up'); break;
-        case 'ArrowDown': handleSetDirection('down'); break;
-        case 'ArrowLeft': handleSetDirection('left'); break;
-        case 'ArrowRight': handleSetDirection('right'); break;
-        case 'w':
-        case 'W':
-             handleMoveForward(); break;
+        case 'ArrowUp': handleMove('up'); break;
+        case 'ArrowDown': handleMove('down'); break;
+        case 'ArrowLeft': handleMove('left'); break;
+        case 'ArrowRight': handleMove('right'); break;
         case ' ':
         case 'Enter':
           handleInteraction(); break;
+        case 'd':
+        case 'D':
+            if(mode === 'picking') handleDispatch();
+            break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleMoveForward, handleInteraction]);
+  }, [handleMove, handleInteraction, mode]);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(prev => prev + 1), 1000);
@@ -265,24 +263,21 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
         <Card className="hidden lg:block">
             <CardContent className="p-4 flex flex-col gap-4">
                 <div className="flex justify-center items-center gap-2">
-                     <Button variant="outline" size="icon" onClick={() => handleSetDirection('up')}><ArrowUp/></Button>
+                     <Button variant="outline" size="icon" onClick={() => handleMove('up')}><ArrowUp/></Button>
                 </div>
                 <div className="flex justify-center items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={() => handleSetDirection('left')}><ArrowLeft/></Button>
-                    <Button variant="outline" size="icon" onClick={handleMoveForward}><MoveUp /></Button>
-                    <Button variant="outline" size="icon" onClick={() => handleSetDirection('right')}><ArrowRight/></Button>
+                    <Button variant="outline" size="icon" onClick={() => handleMove('left')}><ArrowLeft/></Button>
+                     <Button onClick={handleInteraction} className="p-6 h-auto aspect-square bg-primary/20"><Gamepad className="w-6 h-6"/></Button>
+                    <Button variant="outline" size="icon" onClick={() => handleMove('right')}><ArrowRight/></Button>
                 </div>
                 <div className="flex justify-center items-center gap-2">
-                     <Button variant="outline" size="icon" onClick={() => handleSetDirection('down')}><ArrowDown/></Button>
+                     <Button variant="outline" size="icon" onClick={() => handleMove('down')}><ArrowDown/></Button>
                 </div>
-                 <Button onClick={handleInteraction} className="w-full bg-primary/20"><Gamepad className="mr-2"/>Interactuar</Button>
-                {showDispatchButton && <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90"><Truck className="mr-2"/>Despacho</Button>}
-                <p className="text-xs text-muted-foreground text-center">Usa las flechas para girar, 'W' para avanzar y Espacio/Enter para interactuar.</p>
+                {showDispatchButton && <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90"><Truck className="mr-2"/>Despacho (D)</Button>}
+                <p className="text-xs text-muted-foreground text-center">Usa las flechas para moverte, Espacio/Enter para interactuar.</p>
             </CardContent>
         </Card>
       </div>
     </div>
   );
 }
-
-    
