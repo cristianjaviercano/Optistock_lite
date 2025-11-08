@@ -1,8 +1,9 @@
+
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Gamepad, Move, Package, PackageCheck, PackageOpen, PackageSearch, Shuffle, Route, CircleDollarSign, Timer, Truck, Warehouse, Eraser } from "lucide-react";
+import { BookOpen, Gamepad, Move, Package, PackageCheck, PackageOpen, PackageSearch, Shuffle, Route, CircleDollarSign, Timer, Truck, Warehouse, Eraser, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import React from "react";
 import type { OrderItemStatus } from "@/lib/types";
@@ -154,7 +155,7 @@ export default function TutorialPage() {
                   </ul>
                 </div>
                  <div>
-                  <h3 className="text-xl font-semibold mb-4">Métricas</h3>
+                  <h3 className="text-xl font-semibold mb-4">Métricas y Resultados</h3>
                    <ul className="space-y-4">
                     <InstructionStep 
                       icon={Timer}
@@ -170,6 +171,11 @@ export default function TutorialPage() {
                       icon={CircleDollarSign}
                       title="Costo"
                       description="Un costo operativo calculado en base a tus movimientos y el tiempo total. ¡Intenta minimizarlo!"
+                    />
+                     <InstructionStep 
+                      icon={Trophy}
+                      title="Comparación con Ruta Óptima"
+                      description="En la pestaña 'Resultados', después de seleccionar una simulación, puedes presionar un botón para comparar tu rendimiento contra una ruta calculada por un algoritmo de optimización. ¡Es la mejor forma de encontrar oportunidades de mejora!"
                     />
                   </ul>
                 </div>
