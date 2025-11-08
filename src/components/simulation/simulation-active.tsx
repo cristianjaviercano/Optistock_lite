@@ -352,9 +352,9 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
       
        {/* CONTROLS AREA */}
       <Card className="mt-6">
-          <CardContent className="p-2">
+          <CardContent className="p-2 md:p-4">
              <TouchControls />
-             <p className="text-xs text-muted-foreground text-center -mt-2">Usa los controles o las flechas del teclado. Espacio para interactuar. 'D' para despachar.</p>
+             <p className="text-xs text-muted-foreground text-center -mt-2 pb-2">Usa los controles o las flechas del teclado. Espacio para interactuar. 'D' para despachar.</p>
           </CardContent>
       </Card>
 
