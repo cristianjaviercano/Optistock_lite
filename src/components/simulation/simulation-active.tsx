@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -9,7 +8,7 @@ import SimulationGrid from './simulation-grid';
 import MetricsDashboard from './metrics-dashboard';
 import OrderList from './order-list';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent } from '../ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Button } from '../ui/button';
 import { Gamepad, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Truck, Minus, RefreshCw } from 'lucide-react';
 import {
@@ -23,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { cn } from '@/lib/utils';
+import AdBanner from '@/components/shared/ad-banner';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -289,19 +289,18 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
   
   const HandDrawnButton = ({ children, className, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) => (
     <Button
-        variant="ghost"
-        className={cn("h-auto w-auto bg-transparent hover:bg-transparent border-2 border-foreground rounded-lg px-6 py-4 font-headline text-lg tracking-wider shadow-[4px_4px_0px_0px_hsl(var(--secondary))] hover:shadow-[2px_2px_0px_0px_hsl(var(--secondary))] transition-all disabled:opacity-30 disabled:shadow-none", className)}
+        variant="outline"
+        className={cn("h-auto w-auto bg-card hover:bg-secondary border-2 border-input rounded-lg px-6 py-4 font-semibold text-base tracking-wider shadow-none transition-all disabled:opacity-30", className)}
         {...props}
     >
         {children}
     </Button>
 );
 
-
   const TouchControls = () => (
     <div className="w-full flex justify-around items-center p-4">
         <HandDrawnButton onClick={handleDispatch} disabled={!showDispatchButton}>
-            despacho
+            Despacho
         </HandDrawnButton>
         
         <div className="grid grid-cols-3 grid-rows-3 gap-2 w-36 h-36">
@@ -312,7 +311,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
                 <Button variant="outline" size="icon" onClick={() => handleMove('left')}><ArrowLeft/></Button>
             </div>
              <div className="col-start-2 row-start-2 flex justify-center items-center">
-                <Button onClick={handleInteraction} variant="primary" size="icon" className="w-12 h-12"><Minus className="w-8 h-8"/></Button>
+                <Button onClick={handleInteraction} variant="default" size="icon" className="w-12 h-12 rounded-full"><Gamepad className="w-6 h-6"/></Button>
             </div>
              <div className="col-start-3 row-start-2 flex justify-center items-center">
                 <Button variant="outline" size="icon" onClick={() => handleMove('right')}><ArrowRight/></Button>
@@ -323,7 +322,7 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
         </div>
         
         <HandDrawnButton onClick={handleNewOrder}>
-            Nuevo pedido
+            Nuevo Pedido
         </HandDrawnButton>
     </div>
 );
@@ -331,33 +330,36 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          <MetricsDashboard time={time} moves={moves} cost={cost} />
-          <div className="w-full overflow-x-auto rounded-lg border bg-card p-2 shadow-inner md:p-4">
-              <SimulationGrid
-                  layout={layout}
-                  gridSize={gridSize}
-                  playerPosition={playerPosition}
-                  playerDirection={direction}
-                  order={currentOrder}
-                  carriedItem={carriedItem}
-              />
-          </div>
-        </div>
-        <div className="flex flex-col gap-6">
-          <OrderList order={currentOrder} mode={mode} />
+      <div className="grid grid-cols-1 gap-6">
+        <Card>
+            <CardContent className="p-4 space-y-4">
+                <MetricsDashboard time={time} moves={moves} cost={cost} />
+                <div className="w-full overflow-x-auto rounded-lg border bg-card p-2 shadow-inner md:p-4">
+                    <SimulationGrid
+                        layout={layout}
+                        gridSize={gridSize}
+                        playerPosition={playerPosition}
+                        playerDirection={direction}
+                        order={currentOrder}
+                        carriedItem={carriedItem}
+                    />
+                </div>
+            </CardContent>
+        </Card>
+        
+        <OrderList order={currentOrder} mode={mode} />
+        
+        <Card>
+            <CardContent className="p-2 md:p-4">
+                <TouchControls />
+                <p className="text-xs text-muted-foreground text-center -mt-2 pb-2">Usa los controles o las flechas del teclado. Espacio para interactuar. 'D' para despachar.</p>
+            </CardContent>
+        </Card>
+        
+        <div className="mt-4">
+          <AdBanner />
         </div>
       </div>
-      
-       {/* CONTROLS AREA */}
-      <Card className="mt-6">
-          <CardContent className="p-2 md:p-4">
-             <TouchControls />
-             <p className="text-xs text-muted-foreground text-center -mt-2 pb-2">Usa los controles o las flechas del teclado. Espacio para interactuar. 'D' para despachar.</p>
-          </CardContent>
-      </Card>
-
 
       <AlertDialog open={isOrderComplete}>
         <AlertDialogContent>
@@ -376,5 +378,3 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
     </>
   );
 }
-
-    
