@@ -275,6 +275,28 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
   
   const showDispatchButton = mode === 'picking' && currentOrder.some(o => o.status === 'ready-for-dispatch');
 
+  const TouchControls = () => (
+    <CardContent className="p-4 flex flex-col gap-4">
+      <div className="flex justify-center items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => handleMove('up')}><ArrowUp/></Button>
+      </div>
+      <div className="flex justify-center items-center gap-2">
+          <Button variant="outline" size="icon" onClick={() => handleMove('left')}><ArrowLeft/></Button>
+            <Button onClick={handleInteraction} className="p-6 h-auto aspect-square bg-primary/20"><Gamepad className="w-6 h-6"/></Button>
+          <Button variant="outline" size="icon" onClick={() => handleMove('right')}><ArrowRight/></Button>
+      </div>
+      <div className="flex justify-center items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => handleMove('down')}><ArrowDown/></Button>
+      </div>
+      {showDispatchButton && (
+        <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+            <Truck className="mr-2"/>Despacho (D)
+        </Button>
+      )}
+      <p className="text-xs text-muted-foreground text-center">Usa los controles para moverte e interactuar.</p>
+    </CardContent>
+  );
+
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -290,44 +312,16 @@ export default function SimulationActive({ layout, order, mode, playMode, initia
                   carriedItem={carriedItem}
               />
           </div>
-          {/* Touch controls for mobile/tablet */}
+          {/* Controls for mobile/tablet */}
           <Card className="lg:hidden">
-              <CardContent className="p-4 flex flex-col gap-4">
-                  <div className="flex justify-center items-center gap-2">
-                       <Button variant="outline" size="icon" onClick={() => handleMove('up')}><ArrowUp/></Button>
-                  </div>
-                  <div className="flex justify-center items-center gap-2">
-                      <Button variant="outline" size="icon" onClick={() => handleMove('left')}><ArrowLeft/></Button>
-                       <Button onClick={handleInteraction} className="p-6 h-auto aspect-square bg-primary/20"><Gamepad className="w-6 h-6"/></Button>
-                      <Button variant="outline" size="icon" onClick={() => handleMove('right')}><ArrowRight/></Button>
-                  </div>
-                  <div className="flex justify-center items-center gap-2">
-                       <Button variant="outline" size="icon" onClick={() => handleMove('down')}><ArrowDown/></Button>
-                  </div>
-                  {showDispatchButton && <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90"><Truck className="mr-2"/>Despacho</Button>}
-                  <p className="text-xs text-muted-foreground text-center">Usa los controles para moverte e interactuar.</p>
-              </CardContent>
+            <TouchControls />
           </Card>
         </div>
         <div className="flex flex-col gap-6">
           <OrderList order={currentOrder} mode={mode} />
-           {/* Touch controls for desktop */}
+          {/* Controls for desktop */}
           <Card className="hidden lg:block">
-              <CardContent className="p-4 flex flex-col gap-4">
-                  <div className="flex justify-center items-center gap-2">
-                       <Button variant="outline" size="icon" onClick={() => handleMove('up')}><ArrowUp/></Button>
-                  </div>
-                  <div className="flex justify-center items-center gap-2">
-                      <Button variant="outline" size="icon" onClick={() => handleMove('left')}><ArrowLeft/></Button>
-                       <Button onClick={handleInteraction} className="p-6 h-auto aspect-square bg-primary/20"><Gamepad className="w-6 h-6"/></Button>
-                      <Button variant="outline" size="icon" onClick={() => handleMove('right')}><ArrowRight/></Button>
-                  </div>
-                  <div className="flex justify-center items-center gap-2">
-                       <Button variant="outline" size="icon" onClick={() => handleMove('down')}><ArrowDown/></Button>
-                  </div>
-                  {showDispatchButton && <Button onClick={handleDispatch} className="w-full bg-accent text-accent-foreground hover:bg-accent/90"><Truck className="mr-2"/>Despacho (D)</Button>}
-                  <p className="text-xs text-muted-foreground text-center">Usa las flechas para moverte, Espacio/Enter para interactuar.</p>
-              </CardContent>
+            <TouchControls />
           </Card>
         </div>
       </div>
