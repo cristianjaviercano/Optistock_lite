@@ -48,9 +48,7 @@ const PalletBoxIcon = ({ boxColor, className }: { boxColor: string; className?: 
         strokeLinejoin="round"
     >
         {/* Pallet */}
-        <rect width="20" height="4" x="2" y="18" fill="#D2B48C" rx="1" />
-        <rect width="4" height="2" x="4" y="16" fill="#A0522D" />
-        <rect width="4" height="2" x="16" y="16" fill="#A0522D" />
+        <rect width="20" height="6" x="2" y="16" fill="#D2B48C" rx="1" />
 
         {/* Box */}
         <rect width="16" height="12" x="4" y="4" fill={boxColor} rx="1" stroke="#000" strokeWidth="0.5" />
