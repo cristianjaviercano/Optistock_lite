@@ -16,6 +16,13 @@ function getUsers(): User[] {
         role: 'admin'
       });
       saveUsers(users);
+    } else {
+        // Ensure admin password is correct
+        const adminUser = users.find((u: User) => u.email === 'admin@example.com');
+        if (adminUser && adminUser.password !== 'admin') {
+            adminUser.password = 'admin';
+            saveUsers(users);
+        }
     }
     return users;
   } catch (e) {
