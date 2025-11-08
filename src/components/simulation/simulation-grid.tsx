@@ -105,11 +105,11 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
                
                let icon = null;
                 const IconComponent = {
-                    shelf: <div className="w-full h-full bg-primary/10 opacity-50"></div>,
-                    'bay-in': <div className="w-full h-full bg-accent/10 opacity-50"></div>,
-                    'bay-out': <div className="w-full h-full bg-accent/10 opacity-50"></div>,
-                    processing: <div className="w-full h-full bg-chart-3/10 opacity-50"></div>,
-                    forklift: <div className="w-full h-full bg-chart-4/10 opacity-50"></div>,
+                    shelf: <div className="w-full h-full bg-primary/20"></div>,
+                    'bay-in': <div className="w-full h-full bg-accent/20"></div>,
+                    'bay-out': <div className="w-full h-full bg-accent/20"></div>,
+                    processing: <div className="w-full h-full bg-chart-3/20"></div>,
+                    forklift: <div className="w-full h-full bg-chart-4/20"></div>,
                     floor: null,
                 }[item.type];
        

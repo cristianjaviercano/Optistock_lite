@@ -2,20 +2,19 @@
 
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { WarehouseItemType } from "@/lib/types";
-import { Eraser, Server, Factory, ArrowRightToLine, ArrowLeftFromLine, Forklift, Home } from "lucide-react";
+import { Eraser } from "lucide-react";
 
 interface DesignerToolbarProps {
   selectedTool: WarehouseItemType | 'eraser';
   setSelectedTool: (tool: WarehouseItemType | 'eraser') => void;
 }
 
-const tools = [
-  { value: 'shelf', label: 'Estante', icon: Server },
-  { value: 'bay-in', label: 'Ingreso', icon: ArrowRightToLine },
-  { value: 'bay-out', label: 'Despacho', icon: ArrowLeftFromLine },
-  { value: 'processing', label: 'Procesamiento', icon: Factory },
-  { value: 'forklift', label: 'Zona de Montacargas', icon: Home },
-  { value: 'eraser', label: 'Borrador', icon: Eraser },
+const tools: { value: WarehouseItemType | 'eraser', label: string, colorClass: string }[] = [
+  { value: 'shelf', label: 'Estante', colorClass: 'bg-primary' },
+  { value: 'bay-in', label: 'Ingreso', colorClass: 'bg-accent' },
+  { value: 'bay-out', label: 'Despacho', colorClass: 'bg-accent' },
+  { value: 'processing', label: 'Procesamiento', colorClass: 'bg-chart-3' },
+  { value: 'forklift', label: 'Zona de Montacargas', colorClass: 'bg-chart-4' },
 ]
 
 export default function DesignerToolbar({ selectedTool, setSelectedTool }: DesignerToolbarProps) {
@@ -32,10 +31,14 @@ export default function DesignerToolbar({ selectedTool, setSelectedTool }: Desig
       >
         {tools.map(tool => (
             <ToggleGroupItem key={tool.value} value={tool.value} aria-label={tool.label} className="flex gap-2">
-                <tool.icon className="h-4 w-4" />
+                <div className={`h-4 w-4 rounded-sm ${tool.colorClass}`}></div>
                 <span>{tool.label}</span>
             </ToggleGroupItem>
         ))}
+         <ToggleGroupItem value="eraser" aria-label="Borrador" className="flex gap-2">
+            <Eraser className="h-4 w-4" />
+            <span>Borrador</span>
+        </ToggleGroupItem>
       </ToggleGroup>
     </div>
   );
