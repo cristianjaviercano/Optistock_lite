@@ -39,8 +39,22 @@ const ForkliftSvg = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => 
     </svg>
 );
 
-const ItemCircle = ({ color, className }: { color: string; className?: string }) => (
-    <div className={cn("h-4 w-4 rounded-full", color, className)}></div>
+
+const PalletBoxIcon = ({ boxColor, className }: { boxColor: string; className?: string }) => (
+    <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        className={cn("h-full w-full", className)}
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+    >
+        {/* Pallet (70% size, centered) */}
+        <rect width="16.8" height="16.8" x="3.6" y="3.6" fill="#A0522D" rx="1" />
+        {/* Box (40% size, centered on top) */}
+        <rect width="9.6" height="9.6" x="7.2" y="5.2" fill={boxColor} rx="1" stroke="#000" strokeWidth="0.5" />
+        {/* Box fold line */}
+        <line x1="7.2" y1="10" x2="16.8" y2="10" stroke="#000" strokeOpacity="0.2" strokeWidth="1" />
+    </svg>
 );
 
 
@@ -66,15 +80,22 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
   }
 
   const getOrderItemIcon = (item: OrderItem) => {
-    const commonClasses = "";
+    const commonClasses = "p-1";
     switch (item.status) {
-        case 'pending': return <ItemCircle color="bg-destructive" className={commonClasses} />;
-        case 'processing': return <ItemCircle color="bg-orange-500" className={cn(commonClasses, "animate-pulse")} />;
-        case 'processed': return <ItemCircle color="bg-purple-500" className={commonClasses} />;
-        case 'ready-for-dispatch': return <ItemCircle color="bg-accent" className={commonClasses} />;
-        case 'completed': return <ItemCircle color="bg-green-500" className={cn(commonClasses, "opacity-50")} />;
+        case 'pending': return <PalletBoxIcon boxColor='hsl(var(--destructive))' className={commonClasses} />;
+        case 'processing': return <PalletBoxIcon boxColor='#f97316' className={cn(commonClasses, "animate-pulse")} />;
+        case 'processed': return <PalletBoxIcon boxColor='#8b5cf6' className={commonClasses} />;
+        case 'ready-for-dispatch': return <PalletBoxIcon boxColor='hsl(var(--accent))' className={commonClasses} />;
+        case 'completed': return <PalletBoxIcon boxColor='#22c55e' className={cn(commonClasses, "opacity-50")} />;
         default: return null;
     }
+  }
+
+  const getCarriedItemColor = () => {
+      if (!carriedItem) return '';
+      // This is a simplified logic. In a real scenario, you'd have the full item info.
+      // We assume if it's carried, it's equivalent to pending/carrying state.
+      return 'hsl(var(--destructive))';
   }
 
   return (
@@ -123,8 +144,8 @@ export default function SimulationGrid({ layout, gridSize, playerPosition, playe
                     <div className="absolute inset-0 flex items-center justify-center z-10">
                         <ForkliftSvg className={cn("h-full w-full text-foreground transition-transform scale-[0.8]", getRotationClass(playerDirection))} />
                         {carriedItem && (
-                             <div className={cn("h-2/5 w-2/5 z-20", getForkliftAttachmentClass(playerDirection))}>
-                                <ItemCircle color="bg-destructive" />
+                             <div className={cn("h-3/5 w-3/5 z-20", getForkliftAttachmentClass(playerDirection))}>
+                                <PalletBoxIcon boxColor={getCarriedItemColor()} />
                              </div>
                         )}
                     </div>
